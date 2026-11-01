@@ -1,0 +1,25 @@
+# Dependencies and build output
+node_modules/
+dist/
+coverage/
+
+# Local environment; .env.example is the committed template
+.env
+.env.*
+!.env.example
+
+# Tool caches and logs
+*.tsbuildinfo
+.eslintcache
+*.log
+
+# Key material must never be committed
+*.pem
+*.key
+
+# Editors and OS
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.DS_Store

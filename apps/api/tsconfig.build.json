@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.json",
+  // The build, used by `nest build` and `nest start`.
+  "compilerOptions": {
+    "noEmit": false,
+    // Required since TypeScript 6.0 stopped inferring it (error TS5011 without it).
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "sourceMap": true,
+    // Production code gets Node types only: a stray describe() or expect() must not type-check.
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"],
+  // Unit tests sit next to the code they test; they stay out of dist.
+  "exclude": ["**/*.spec.ts"]
+}

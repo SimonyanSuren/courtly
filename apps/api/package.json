@@ -1,0 +1,30 @@
+{
+  "name": "@courtly/api",
+  "version": "0.0.0",
+  "description": "Courtly REST API: courts, availability and bookings.",
+  "private": true,
+  "type": "commonjs",
+  "engines": {
+    "node": "^26.13.0"
+  },
+  "scripts": {
+    "build": "nest build",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node --enable-source-maps dist/main.js",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@nestjs/common": "12.3.2",
+    "@nestjs/core": "12.3.2",
+    "@nestjs/platform-express": "12.3.2",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "12.0.11",
+    "@nestjs/schematics": "12.0.12",
+    "@types/node": "26.6.6"
+  }
+}

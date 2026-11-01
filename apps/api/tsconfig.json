@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  // Type-checks the API with its tests and config files: the editor, ESLint and `npm run typecheck`
+  // use it. It never emits; tsconfig.build.json is the build.
+  "compilerOptions": {
+    /* Language and environment: Node 26 runs ES2025 natively (as in @tsconfig/node26) */
+    "target": "es2025",
+    // Listed because the default lib for a target also adds DOM types.
+    "lib": ["es2025"],
+    // Nest's decorators are the legacy kind: standard decorators cannot decorate parameters.
+    "experimentalDecorators": true,
+    // Nest's dependency injection reads constructor parameter types from this metadata.
+    "emitDecoratorMetadata": true,
+
+    /* Modules: a CommonJS app (package.json "type"); Nest 12's ES modules load through require(esm) */
+    "module": "nodenext",
+    // TypeScript 6.0 loads no @types packages unless listed.
+    "types": ["node"],
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "*.ts"]
+}

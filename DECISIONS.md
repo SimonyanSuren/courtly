@@ -188,3 +188,29 @@ the tests cover them.
   - An init process such as tini: Node handles SIGTERM itself and starts no child processes.
   - Alpine: Node supports musl only on x64 and at Tier 2, while glibc is Tier 1 on x64 and arm64
     (Apple-silicon Macs).
+
+## 11. Time: Temporal, real hours and the days the clocks change
+
+- **Chosen:** Node's built-in Temporal. The booking rules are pure functions in
+  `modules/courts/domain` and `modules/bookings/domain`; they take `Temporal.Instant` for moments
+  and `Temporal.PlainDate` for calendar days. `Date` appears only where the `pg` driver returns
+  it.
+- **A court is open while the facility's clock shows a time from its opening hour up to its
+  closing hour.** When the clocks go forward, the skipped hour (01:00 in Lisbon) opens or closes a
+  court at the moment the clock jumps past it; when they go back, the repeated hour (01:00) counts
+  from its first occurrence.
+- **Hours are real hours:** slots, 2-hour bookings and the 2-hour cancellation notice are exact
+  durations, also across a clock change.
+- **A booking stays within the day it starts on**, as opening hours do: at a court open from 0 to
+  24, a 2-hour booking at 23:00 is rejected.
+- **Why:** availability and booking derive from the same list of slots, so they always agree,
+  and the rules match what a person at the facility sees on the clock.
+- **Rejected:**
+  - A date library: Temporal is built into Node 26, and TypeScript 6.0 types it (lib
+    `esnext.temporal`).
+  - `Date` in the rules: it has no type for a calendar day, it is mutable, and `<` compares two
+    dates without complaint.
+  - For a skipped hour, the time before the jump: a court would open before its opening hour.
+  - For a repeated hour, its second occurrence: a court would stay open after the clock showed
+    its closing hour.
+  - Rejecting such times: availability would fail for the whole day.

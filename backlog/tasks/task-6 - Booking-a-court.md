@@ -4,6 +4,7 @@ title: Booking a court
 status: To Do
 assignee: []
 created_date: '2026-11-01T23:42:00Z'
+updated_date: '2026-11-02T21:42:00Z'
 labels:
   - api
 dependencies:
@@ -30,3 +31,9 @@ Booking is the core of the product and where its rules live. Double booking is t
 - [ ] #7 Each booking keeps the price it was booked at, so later price changes do not alter it
 - [ ] #8 Backend tests cover double-booking prevention with concurrent requests, the cancellation window at its exact boundary, and opening-hours validation
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+The booking and cancellation rules exist as pure functions: checkBooking (bookings/domain/booking.ts) and canCancel (bookings/domain/cancellation.ts). The service turns their result into an ApiError; overlaps stay a database constraint.
+<!-- SECTION:NOTES:END -->

@@ -4,6 +4,7 @@ title: Court availability for a date
 status: To Do
 assignee: []
 created_date: '2026-11-01T23:42:00Z'
+updated_date: '2026-11-02T21:42:00Z'
 labels:
   - api
 dependencies:
@@ -27,3 +28,9 @@ Before booking, a user needs to see which hours of a day are free. The answer mu
 - [ ] #4 Dates are calendar days in the facility's time zone (Europe/Lisbon), including the days the clocks change
 - [ ] #5 Inactive courts have no availability for users
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+daySlots and hasStarted (bookings/domain/slots.ts) give a date's slots in Europe/Lisbon; availability marks each one taken or started.
+<!-- SECTION:NOTES:END -->

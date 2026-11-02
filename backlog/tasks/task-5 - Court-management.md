@@ -4,6 +4,7 @@ title: Court management
 status: To Do
 assignee: []
 created_date: '2026-11-01T23:42:00Z'
+updated_date: '2026-11-02T21:42:00Z'
 labels:
   - api
 dependencies:
@@ -27,3 +28,9 @@ Admins maintain the facility's courts. Courts are never deleted: bookings refere
 - [ ] #4 Users see only active courts; admins see all courts
 - [ ] #5 Prices are stored and returned as integer cents, never as floating-point numbers
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Opening-hours validation exists: isValidOpeningHours in modules/courts/domain/opening-hours.ts. Use it for the 400 and add a matching CHECK constraint.
+<!-- SECTION:NOTES:END -->

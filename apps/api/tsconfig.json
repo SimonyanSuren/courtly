@@ -6,8 +6,9 @@
   "compilerOptions": {
     /* Language and environment: Node 26 runs ES2025 natively (as in @tsconfig/node26) */
     "target": "es2025",
-    // Listed because the default lib for a target also adds DOM types.
-    "lib": ["es2025"],
+    // Listed because the default lib for a target also adds DOM types. Node 26 has Temporal built
+    // in; TypeScript 6.0 declares it only in esnext.temporal, which es2025 does not include.
+    "lib": ["es2025", "esnext.temporal"],
     // Nest's decorators are the legacy kind: standard decorators cannot decorate parameters.
     "experimentalDecorators": true,
     // Nest's dependency injection reads constructor parameter types from this metadata.

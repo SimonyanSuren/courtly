@@ -19,6 +19,8 @@ Run from the repository root; each one covers every workspace.
 - Tests import `describe`, `it` and `expect` from `@jest/globals`; HTTP tests live in
   `apps/api/test/` and boot the app with `createTestApp()`, unit tests sit next to the code as
   `*.spec.ts`. `npm test` needs Docker: it starts its own PostgreSQL with Testcontainers.
+- Jest's `toEqual` treats any two Temporal objects as equal (they have no own properties): compare
+  them as ISO strings.
 
 ## Structure
 

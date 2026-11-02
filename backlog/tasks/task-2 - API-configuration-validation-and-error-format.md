@@ -1,9 +1,12 @@
 ---
 id: TASK-2
 title: API configuration, validation and error format
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@SimonyanSuren'
+  - '@claude'
 created_date: '2026-11-01T23:42:00Z'
+updated_date: '2026-11-02T00:07:00Z'
 labels:
   - api
 dependencies: []
@@ -26,3 +29,11 @@ Every endpoint needs validated settings and one consistent way to reject bad inp
 - [ ] #4 Every error response, including validation errors, unknown routes and unexpected failures, has the same JSON shape with a stable machine-readable code, and unexpected failures reveal no internals
 - [ ] #5 All API routes are served under `/api`
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Tests: Jest + ts-jest + supertest (Nest's defaults). Tests import describe/it/expect from @jest/globals, so no test globals leak into production types. An HTTP smoke test proves the harness boots AppModule.
+2. Configuration: @nestjs/config with a Zod schema validated once at startup. PORT now; each later task adds the variables it uses (database URL in TASK-3, JWT secret in TASK-4). .env.example lists them.
+3. Validation and errors: a small Zod validation pipe of our own (nestjs-zod 5.5.0 supports only Nest 10 and 11). Every error answers as RFC 9457 Problem Details with a stable machine-readable code, from one exception filter registered as APP_FILTER. The /api prefix is set in a configureApp function shared by main.ts and the HTTP tests.
+<!-- SECTION:PLAN:END -->

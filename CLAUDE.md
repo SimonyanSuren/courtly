@@ -6,8 +6,11 @@ Guidance for AI coding agents working in this repository. Humans: start with the
 
 Run from the repository root; each one covers every workspace.
 
-- `npm run lint`, `npm run typecheck`, `npm run build`, `npm run knip`, `npm run format:check`
+- `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, `npm run knip`,
+  `npm run format:check`
 - `npm run start:dev -w apps/api`: the API with reload
+- Tests import `describe`, `it` and `expect` from `@jest/globals`; HTTP tests live in
+  `apps/api/test/`, unit tests next to the code as `*.spec.ts`.
 
 ## Rules
 

@@ -24,6 +24,7 @@ Run from the repository root; each covers every workspace:
 ```sh
 npm run lint
 npm run typecheck
+npm test
 npm run build
 npm run knip           # unused files, exports and dependencies
 npm run format:check

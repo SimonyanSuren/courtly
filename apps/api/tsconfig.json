@@ -17,6 +17,9 @@
     "module": "nodenext",
     // TypeScript 6.0 loads no @types packages unless listed.
     "types": ["node"],
+    // ts-jest supports module nodenext only when it compiles one file at a time; tsc then rejects
+    // code that single-file compilation would get wrong. `npm run typecheck` covers test types.
+    "isolatedModules": true,
     "noEmit": true
   },
   "include": ["src/**/*.ts", "test/**/*.ts", "*.ts"]

@@ -1,17 +1,16 @@
-import { type ConfigType } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { type NestExpressApplication } from '@nestjs/platform-express';
 
 import { AppModule } from './app.module';
 import { configureApp } from './app.setup';
-import { httpConfig } from './http/http.config';
+import { type HttpConfig, httpConfig } from './platform/http/http.config';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   configureApp(app);
   // SIGTERM/SIGINT: stop accepting connections and let in-flight requests finish.
   app.enableShutdownHooks();
-  const http = app.get<ConfigType<typeof httpConfig>>(httpConfig.KEY);
+  const http = app.get<HttpConfig>(httpConfig.KEY);
   await app.listen(http.port);
 }
 

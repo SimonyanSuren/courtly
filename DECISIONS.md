@@ -115,3 +115,21 @@ the tests cover them.
     about 30 lines and already creates the pool with its timeouts and its error listener.
   - A shared test database in Docker Compose: tests would depend on its leftover state and on
     someone starting it first.
+
+## 8. Code structure: `src/platform/` and `src/modules/`
+
+- **Chosen:** in `apps/api/src`, technical capabilities live in `platform/` (config, database,
+  health, http) and business areas in `modules/`, one folder each, created when it has content.
+  `app.module.ts` is the only file that imports every module. Lint rejects any import from
+  `platform/` into `modules/`. How a module is organised inside is decided with the first one.
+- **Why:** Nest recommends one feature module per area. Keeping them apart from the technical code
+  shows what the product does at a glance, and technical code can then never come to depend on
+  business code.
+- **Rejected:**
+  - Features directly in `src/` next to the technical folders, the Nest CLI default: the two
+    kinds of folder mix as modules arrive.
+  - `common/`, the name in Nest's sample app: there it holds request helpers (filters, guards,
+    pipes); here the folder also holds the database and the configuration.
+  - Splitting technical code into `platform/` (infrastructure) and `app/` (framework parts): every
+    piece here is both, and `app/` would be ambiguous next to `app.module.ts`.
+  - Folders by technical type (`controllers/`, `services/`): one feature would touch every folder.

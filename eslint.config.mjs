@@ -297,6 +297,23 @@ export default defineConfig(
       ],
     },
   },
+  {
+    // Technical code serves business modules and never depends on them (DECISIONS.md, entry 8).
+    files: ['apps/api/src/platform/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: String.raw`(^|/)modules(/|$)`,
+              message: 'platform/ must not import business modules; move shared code to platform/.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 
   /* ─────────────────────── JavaScript: tool configs (*.js, *.mjs) ──────────────── */
   {

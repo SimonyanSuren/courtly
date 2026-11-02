@@ -14,6 +14,12 @@ Run from the repository root; each one covers every workspace.
   `apps/api/test/` and boot the app with `createTestApp()`, unit tests sit next to the code as
   `*.spec.ts`. `npm test` needs Docker: it starts its own PostgreSQL with Testcontainers.
 
+## Structure
+
+`apps/api/src/platform/` holds technical capabilities (config, database, health, http);
+`apps/api/src/modules/` holds business areas. `platform/` never imports `modules/` (lint enforces
+it). See DECISIONS.md, entry 8.
+
 ## Rules
 
 - Show every change as a diff and commit only after the user's OK.

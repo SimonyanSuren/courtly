@@ -1,3 +1,4 @@
+import { type ConfigType } from '@nestjs/config';
 import { z } from 'zod';
 
 import { defineConfig } from '../config/config';
@@ -11,3 +12,5 @@ export const httpConfig = defineConfig(
   }),
   (env) => ({ port: env.PORT }),
 );
+
+export type HttpConfig = ConfigType<typeof httpConfig>;

@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 
-import { databaseConfig } from './database/database.config';
-import { DatabaseModule } from './database/database.module';
-import { HealthModule } from './health/health.module';
-import { httpConfig } from './http/http.config';
-import { ProblemDetailsFilter } from './http/problem-details.filter';
-import { SchemaValidationPipe } from './http/schema-validation.pipe';
+import { databaseConfig } from './platform/database/database.config';
+import { DatabaseModule } from './platform/database/database.module';
+import { HealthModule } from './platform/health/health.module';
+import { httpConfig } from './platform/http/http.config';
+import { ProblemDetailsFilter } from './platform/http/problem-details.filter';
+import { SchemaValidationPipe } from './platform/http/schema-validation.pipe';
 
 @Module({
   imports: [

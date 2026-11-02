@@ -8,9 +8,11 @@ Run from the repository root; each one covers every workspace.
 
 - `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, `npm run knip`,
   `npm run format:check`
-- `npm run start:dev -w apps/api`: the API with reload
+- `docker compose up -d --wait postgres`, then `npm run start:dev -w apps/api`: the API with
+  reload (copy `apps/api/.env.example` to `apps/api/.env` first)
 - Tests import `describe`, `it` and `expect` from `@jest/globals`; HTTP tests live in
-  `apps/api/test/`, unit tests next to the code as `*.spec.ts`.
+  `apps/api/test/` and boot the app with `createTestApp()`, unit tests sit next to the code as
+  `*.spec.ts`. `npm test` needs Docker: it starts its own PostgreSQL with Testcontainers.
 
 ## Rules
 

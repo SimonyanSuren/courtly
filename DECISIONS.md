@@ -90,3 +90,28 @@ the tests cover them.
 - **Admins manage courts and see all bookings; they do not book or cancel.** Booking and
   cancelling are user actions, and cancelling on a customer's behalf would need a way to notify
   them.
+
+## 7. PostgreSQL 18 with Drizzle
+
+- **Chosen:** PostgreSQL 18 through Drizzle ORM 0.45 and the `pg` driver. Backend tests run
+  against a real PostgreSQL 18 that Testcontainers starts for each test run.
+- **Why:** the rule that matters most, no double booking, can live in the database itself. An
+  exclusion constraint rejects two bookings of one court whose time ranges overlap, even when both
+  requests commit at the same instant, and PostgreSQL supports it directly (with the `btree_gist`
+  extension). Drizzle keeps the SQL visible: the schema is TypeScript, queries read like SQL,
+  migrations are plain SQL files to review, and raw SQL covers what Drizzle has no syntax for,
+  such as that constraint. Only the real engine can prove a constraint in a test; a mock cannot.
+- **Rejected:**
+  - MySQL: no exclusion constraints, so every booked hour would need its own row under a unique
+    key, modelling time as slots instead of ranges.
+  - MongoDB: no constraint across documents, so preventing overlaps would rely on locking in
+    application code.
+  - Prisma: its schema language cannot express an exclusion constraint, and it adds a code
+    generation step. TypeORM: decorated entity classes clash with the strict compiler settings
+    (every column needs `!`), and its query builder hides more of the SQL.
+  - Drizzle 1.0: a release candidate since April 2026 (rc.5 in October). Compared with 0.45,
+    only relations and relational queries change, and Courtly does not rely on them.
+  - `@nestjs/drizzle`, Nest's own Drizzle module: version 0.0.2, six weeks old. The module here is
+    about 30 lines and already creates the pool with its timeouts and its error listener.
+  - A shared test database in Docker Compose: tests would depend on its leftover state and on
+    someone starting it first.

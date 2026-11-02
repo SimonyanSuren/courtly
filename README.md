@@ -6,15 +6,18 @@ A sports facility booking platform, built as a take-home exercise.
 
 ## Requirements
 
-Node.js 26.13, pinned in `.nvmrc`. npm refuses to install on other versions.
+- Node.js 26.13, pinned in `.nvmrc`. npm refuses to install on other versions.
+- Docker, for the local database and for the tests.
 
 ## Getting started
 
 ```sh
 nvm use
 npm ci
-npm run prepare               # installs the Git hooks (.npmrc turns off install scripts)
-npm run start:dev -w apps/api # the API on http://localhost:3000, reloading on changes
+npm run prepare                      # installs the Git hooks (.npmrc turns off install scripts)
+cp apps/api/.env.example apps/api/.env
+docker compose up -d --wait postgres # PostgreSQL 18 on 127.0.0.1:5432
+npm run start:dev -w apps/api        # the API on http://localhost:3000, reloading on changes
 ```
 
 ## Checks
@@ -24,7 +27,7 @@ Run from the repository root; each covers every workspace:
 ```sh
 npm run lint
 npm run typecheck
-npm test
+npm test               # starts its own PostgreSQL with Testcontainers
 npm run build
 npm run knip           # unused files, exports and dependencies
 npm run format:check

@@ -1,12 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { type NestExpressApplication } from '@nestjs/platform-express';
-import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { z } from 'zod';
 
-import { AppModule } from '../src/app.module';
-import { configureApp } from '../src/app.setup';
+import { createTestApp } from './create-test-app';
 
 const courtSchema = z.object({
   name: z.string().min(1),
@@ -40,14 +38,7 @@ describe('the API over HTTP', () => {
   let app: NestExpressApplication;
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
-      controllers: [ProbeController],
-    }).compile();
-    // logger: false keeps the expected 500 out of the test output.
-    app = moduleRef.createNestApplication<NestExpressApplication>({ logger: false });
-    configureApp(app);
-    await app.init();
+    app = await createTestApp({ controllers: [ProbeController] });
   });
 
   afterAll(async () => {

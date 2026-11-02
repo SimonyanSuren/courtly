@@ -142,3 +142,27 @@ the tests cover them.
     Architecture: each module here has a handful of rules and one database, so the layers would
     add indirection with nothing to swap behind them. The `domain/` folder keeps their main
     benefit, rules testable on their own.
+
+## 9. Login: server-side sessions, passwords hashed with argon2id
+
+- **Chosen:** logging in starts a server-side session. The browser gets a random 32-byte token in
+  an httpOnly cookie; the database keeps only the token's SHA-256 hash, with its user and expiry.
+  A global guard rejects every request without a valid session unless the route is marked
+  public. Passwords are hashed with argon2id from `node:crypto`, at OWASP's recommended cost
+  (19 MiB of memory, 2 passes, 1 lane).
+- **Why:** with sessions, logging out ends access at once and a role change applies on the next
+  request; there is no signing key to protect or rotate. The price is one indexed query per
+  request. argon2id is OWASP's first choice for passwords, and Node has it built in (stable since
+  Node 26.4), so no native module has to be compiled.
+- **Rejected:**
+  - A JWT in the cookie: it stays valid until it expires, even after logout, and a safe setup
+    needs refresh tokens kept on the server anyway. JWTs pay off when other services must check a
+    user without calling this API. A mobile app could later send the same session token in an
+    `Authorization` header.
+  - Nest's `@nestjs/authentication` and `@nestjs/authorization` packages: official, but 0.1
+    releases first published in September 2026. The code here follows the same design (a global
+    guard, hashed session tokens, a dummy hash check for unknown emails) in a few small files.
+  - Passport (`@nestjs/passport`): a strategy layer that adds indirection for one login method.
+  - bcrypt: it uses only the first 72 bytes of a password, and like the `argon2` npm package it
+    is a native module that needs install scripts, which `.npmrc` disables.
+  - scrypt: OWASP's alternative for when argon2id is not available.

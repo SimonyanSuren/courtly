@@ -71,6 +71,8 @@ export default defineConfig(
       'unicorn/prevent-abbreviations': 'off',
       'unicorn/name-replacements': 'off',
       'unicorn/single-line-block-comment-style': 'off',
+      // Leading asterisks are the JSDoc style editors insert and TypeScript's doc tooling reads.
+      'unicorn/no-asterisk-prefix-in-documentation-comments': 'off',
       'unicorn/no-abusive-eslint-disable': 'off',
       'unicorn/no-null': 'off',
       'unicorn/no-static-only-class': 'off',

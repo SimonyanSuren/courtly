@@ -1,12 +1,12 @@
 ---
 id: TASK-2
 title: API configuration, validation and error format
-status: In Progress
+status: Done
 assignee:
   - '@SimonyanSuren'
   - '@claude'
 created_date: '2026-11-01T23:42:00Z'
-updated_date: '2026-11-02T00:48:00Z'
+updated_date: '2026-11-02T14:07:00Z'
 labels:
   - api
 dependencies: []
@@ -25,9 +25,9 @@ Every endpoint needs validated settings and one consistent way to reject bad inp
 <!-- AC:BEGIN -->
 - [x] #1 Settings come from environment variables, validated once at startup; a missing or invalid one stops the start with an error that names it. Each later task adds the variables it uses
 - [x] #2 `.env.example` lists every variable the API reads
-- [ ] #3 Request bodies, route parameters and query strings are validated against schemas; invalid input gets 400 with the failing fields
-- [ ] #4 Every error response, including validation errors, unknown routes and unexpected failures, has the same JSON shape with a stable machine-readable code, and unexpected failures reveal no internals
-- [ ] #5 All API routes are served under `/api`
+- [x] #3 Request bodies, route parameters and query strings are validated against schemas; invalid input gets 400 with the failing fields
+- [x] #4 Every error response, including validation errors, unknown routes and unexpected failures, has the same JSON shape with a stable machine-readable code, and unexpected failures reveal no internals
+- [x] #5 All API routes are served under `/api`
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -43,3 +43,9 @@ Every endpoint needs validated settings and one consistent way to reject bad inp
 <!-- SECTION:NOTES:BEGIN -->
 AC #1 changed: it listed the database URL and JWT secret, which nothing reads until TASK-3 and TASK-4. Each task now adds the variables it uses, so the API never demands a setting it ignores.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Configuration: @nestjs/config validates the environment against a Zod schema at startup; an invalid value stops the start with an error naming it (PORT so far, later tasks add theirs). Validation: Nest's StandardSchemaValidationPipe, registered once as APP_PIPE, validates every argument declared with a schema (e.g. @Body({ schema })) and passes on parsed, typed values. A small subclass adds where each invalid value came from (in: body/query/param, plus the argument name), which the stock error factory cannot see; failures answer 400 VALIDATION_FAILED listing each field. Errors: one catch-all filter, registered as APP_FILTER, answers every error as RFC 9457 Problem Details (application/problem+json, type about:blank) with a stable code extension; unexpected errors become a generic 500 and are logged in full. Routes are served under /api from configureApp, which main.ts and the HTTP tests share. Verified: 15 tests (configuration, the /api prefix, 404, body/parameter/query validation, malformed JSON, the 500 path, no X-Powered-By header) and the built server answering Problem Details.
+<!-- SECTION:FINAL_SUMMARY:END -->

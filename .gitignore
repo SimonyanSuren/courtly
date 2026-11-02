@@ -13,6 +13,9 @@ coverage/
 .eslintcache
 *.log
 
+# Temporary git worktrees that Claude Code's agents work in: full copies of this repository
+.claude/worktrees/
+
 # Key material must never be committed
 *.pem
 *.key

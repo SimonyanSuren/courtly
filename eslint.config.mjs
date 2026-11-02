@@ -18,7 +18,15 @@ import tseslint from 'typescript-eslint';
 export default defineConfig(
   /* ─────────────────────────────── Global ignores ─────────────────────────────── */
   {
-    ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**', '**/*.d.ts', 'backlog/**'],
+    ignores: [
+      '**/dist/**',
+      '**/node_modules/**',
+      '**/coverage/**',
+      '**/*.d.ts',
+      'backlog/**',
+      // Agents' worktrees: other checkouts of this repository, each linted on its own.
+      '.claude/worktrees/**',
+    ],
   },
 
   /* ─────────────────────────────── Base JS recommended ─────────────────────────── */

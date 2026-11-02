@@ -166,3 +166,25 @@ the tests cover them.
   - bcrypt: it uses only the first 72 bytes of a password, and like the `argon2` npm package it
     is a native module that needs install scripts, which `.npmrc` disables.
   - scrypt: OWASP's alternative for when argon2id is not available.
+
+## 10. Docker: one image per app, migrations as a one-off service
+
+- **Chosen:** each app has a multi-stage Dockerfile in its own folder (`apps/api/Dockerfile`),
+  built from the repository root, with its allowlist in `Dockerfile.dockerignore` next to it. The
+  runtime image is Node 26 on Debian slim with production dependencies only; its files belong to
+  root and it runs as UID 1000. Compose starts PostgreSQL, then a one-off `migrate` service, then
+  the API, each waiting for a health check or for the previous step to exit successfully. The
+  containers run with a read-only filesystem and no Linux capabilities.
+- **Why:** npm workspaces share one lockfile at the root, so the root is the build context; the
+  Dockerfile-specific ignore file still sends each build only the files it needs. Migrations run
+  once, before any API instance starts: two processes applying them at the same time could apply
+  one twice. A non-root process over root-owned files cannot rewrite its own code.
+- **Rejected:**
+  - One Dockerfile at the root: unclear which app it builds once the web app has its own image.
+  - Migrating when the API starts: several API instances would race to apply the migrations.
+  - Compose profiles: a plain `docker compose up` must start everything.
+  - Installing the root workspace in the build: it brings the linters and git hooks, while
+    TypeScript already comes with `@nestjs/cli`.
+  - An init process such as tini: Node handles SIGTERM itself and starts no child processes.
+  - Alpine: Node supports musl only on x64 and at Tier 2, while glibc is Tier 1 on x64 and arm64
+    (Apple-silicon Macs).

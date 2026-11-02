@@ -8,6 +8,8 @@ Run from the repository root; each one covers every workspace.
 
 - `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, `npm run knip`,
   `npm run format:check`
+- `docker compose up`: the whole stack from production images (PostgreSQL, migrations, the API on
+  127.0.0.1:3000); `docker compose down -v` also deletes the data
 - `docker compose up -d --wait postgres`, then `npm run start:dev -w apps/api`: the API with
   reload (copy `apps/api/.env.example` to `apps/api/.env` first)
 - Database schema: tables are declared in `apps/api/src/modules/*/entities/*.entity.ts`. After a

@@ -1,9 +1,12 @@
 ---
 id: TASK-13
 title: One-command start with Docker Compose
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@SimonyanSuren'
+  - '@claude'
 created_date: '2026-11-01T23:42:00Z'
+updated_date: '2026-11-02T21:41:00Z'
 labels:
   - infra
 dependencies:
@@ -27,3 +30,9 @@ Running the project must take one command from a fresh clone, on a machine that 
 - [ ] #3 Production images contain no devDependencies and run as a non-root user
 - [ ] #4 Restarting the stack keeps the data and does not duplicate the seed
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+The API part is in place: apps/api/Dockerfile and Compose services postgres, migrate (one-off) and api, gated by health checks. Still to add: the seed service and the web app's image and service.
+<!-- SECTION:NOTES:END -->

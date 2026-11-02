@@ -1,13 +1,36 @@
-# Local development: PostgreSQL for `npm run start:dev`. The tests start their own.
+# Courtly from a fresh clone, with only Docker: PostgreSQL, then the migrations, then the API.
 #
-#   docker compose up -d --wait postgres   start PostgreSQL on 127.0.0.1:5432
-#   docker compose down                    stop it, keeping the data
-#   docker compose down -v                 stop it and delete the data
+#   docker compose up                      build and start everything; Ctrl+C stops it
+#   docker compose up -d --wait            the same in the background, until the API is healthy
+#   docker compose up -d --wait postgres   only PostgreSQL, for `npm run start:dev`
+#   docker compose down                    stop everything, keeping the data
+#   docker compose down -v                 stop everything and delete the data
 #
+# The API answers on http://127.0.0.1:3000/api; GET /api/health checks it and its database. The
+# tests start their own PostgreSQL.
 # Ports bind to 127.0.0.1: Docker publishes on all interfaces by default, and its NAT rules
 # bypass host firewalls such as ufw. Credentials are local-only and match apps/api/.env.example.
 
 name: courtly
+
+# Shared by every service that runs the API image: the API and its one-off jobs.
+x-api: &api
+  build:
+    context: .
+    dockerfile: apps/api/Dockerfile
+  image: courtly-api
+  # Rebuild on every `up`, so it runs the code that is checked out; unchanged layers come from
+  # the build cache. The default would reuse an image built from older code.
+  pull_policy: build
+  environment:
+    PORT: 3000
+    DATABASE_URL: postgres://courtly:courtly@postgres:5432/courtly
+  # Hardening a production runtime should also apply. The API writes nothing to disk, so the
+  # filesystem is read-only; /tmp stays writable, in memory, for libraries that need scratch files.
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
 
 services:
   postgres:
@@ -33,6 +56,25 @@ services:
       retries: 3
       start_period: 30s
       start_interval: 1s
+
+  # Applies pending migrations, then exits. Applied ones are recorded in the database, so a rerun
+  # changes nothing.
+  migrate:
+    <<: *api
+    command: [node, --enable-source-maps, dist/migrate.js]
+    # A one-off job, not a server: the image's HTTP health check does not apply.
+    healthcheck:
+      disable: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    <<: *api
+    ports: ['127.0.0.1:3000:3000']
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
 
 volumes:
   postgres-data:

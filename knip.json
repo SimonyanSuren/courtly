@@ -4,6 +4,7 @@
     ".": {},
     "apps/api": {
       "entry": ["src/main.ts", "src/migrate.ts"]
-    }
+    },
+    "apps/web": {}
   }
 }

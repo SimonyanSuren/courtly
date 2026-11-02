@@ -16,17 +16,21 @@ Run from the repository root; each one covers every workspace.
   change, `npm run db:generate -w apps/api -- --name <change>` writes the SQL migration to
   `apps/api/migrations/` (review and commit it); `npm run build -w apps/api`, then
   `npm run db:migrate -w apps/api` applies pending migrations.
-- Tests import `describe`, `it` and `expect` from `@jest/globals`; HTTP tests live in
+- API tests import `describe`, `it` and `expect` from `@jest/globals`; HTTP tests live in
   `apps/api/test/` and boot the app with `createTestApp()`, unit tests sit next to the code as
   `*.spec.ts`. `npm test` needs Docker: it starts its own PostgreSQL with Testcontainers.
 - Jest's `toEqual` treats any two Temporal objects as equal (they have no own properties): compare
   them as ISO strings.
+- `npm run dev -w apps/web`: the web app on http://localhost:5173 with reload; it proxies `/api` to
+  the API on port 3000. Web tests are `*.spec.tsx` next to the code: they import from `vitest`,
+  replace `fetch` with `vi.stubGlobal` and render the app's routes with Testing Library.
 
 ## Structure
 
 `apps/api/src/platform/` holds technical capabilities (config, database, health, http);
 `apps/api/src/modules/` holds business areas. `platform/` never imports `modules/` (lint enforces
-it). See DECISIONS.md, entry 8.
+it). See DECISIONS.md, entry 8. `apps/web/src/` holds the React app, one folder per area (auth,
+courts, admin).
 
 ## Rules
 

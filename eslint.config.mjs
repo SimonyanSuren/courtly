@@ -7,6 +7,8 @@ import jsoncPlugin from 'eslint-plugin-jsonc';
 import nPlugin from 'eslint-plugin-n';
 import prettierPlugin from 'eslint-plugin-prettier';
 import promisePlugin from 'eslint-plugin-promise';
+import reactHooksPlugin from 'eslint-plugin-react-hooks';
+import { reactRefresh } from 'eslint-plugin-react-refresh';
 import securityPlugin from 'eslint-plugin-security';
 import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort';
 import sonarjsPlugin from 'eslint-plugin-sonarjs';
@@ -32,10 +34,10 @@ export default defineConfig(
   /* ─────────────────────────────── Base JS recommended ─────────────────────────── */
   eslintJs.configs.recommended,
 
-  /* ─────────────── TypeScript: every workspace (API now, web app later) ─────────────── */
+  /* ─────────────────────── TypeScript: every workspace ─────────────────────────── */
   {
     name: 'typescript',
-    files: ['**/*.ts'],
+    files: ['**/*.ts', '**/*.tsx'],
     extends: [...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked],
     languageOptions: {
       ecmaVersion: 'latest',
@@ -187,6 +189,12 @@ export default defineConfig(
         },
         { selector: 'parameter', format: ['camelCase'], leadingUnderscore: 'allow' },
         { selector: 'property', format: ['camelCase', 'UPPER_CASE'] },
+        // Keys that need quotes are names from outside, such as HTTP headers and URL paths.
+        {
+          selector: ['objectLiteralProperty', 'objectLiteralMethod'],
+          modifiers: ['requiresQuotes'],
+          format: null,
+        },
         {
           selector: 'memberLike',
           modifiers: ['private'],
@@ -329,6 +337,20 @@ export default defineConfig(
       // Tests create users with made-up passwords and hashes; none of them is a credential.
       'sonarjs/no-hardcoded-passwords': 'off',
     },
+  },
+
+  /* ─────────────────────── Web: React rules ────────────────────────────────────── */
+  {
+    name: 'web-react',
+    files: ['apps/web/**/*.ts', 'apps/web/**/*.tsx'],
+    extends: [reactHooksPlugin.configs.flat.recommended],
+  },
+  {
+    // Fast refresh keeps a component's state across edits only in files that export nothing but
+    // components. Tests are not refreshed.
+    files: ['apps/web/src/**/*.tsx'],
+    ignores: ['**/*.spec.tsx'],
+    extends: [reactRefresh.configs.vite()],
   },
 
   /* ─────────────────────── JavaScript: tool configs (*.js, *.mjs) ──────────────── */

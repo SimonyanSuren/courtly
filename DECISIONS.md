@@ -214,3 +214,26 @@ the tests cover them.
   - For a repeated hour, its second occurrence: a court would stay open after the clock showed
     its closing hour.
   - Rejecting such times: availability would fail for the whole day.
+
+## 12. Web app: React with Vite, React Router, TanStack Query and Mantine
+
+- **Chosen:** a React 19 single-page app built by Vite. React Router, in declarative mode, maps
+  URLs to screens; TanStack Query holds what the server says, from the logged-in user to
+  availability and bookings, with loading and error states; Mantine provides the components.
+  Tests use Vitest and Testing Library. The app calls the API under `/api` on its own origin:
+  through Vite's proxy in development, through the web server in Docker.
+- **Why:** the API is a separate service, so the browser needs only static files. Served from the
+  same origin as `/api`, the httpOnly session cookie stays first-party and no CORS is needed.
+  Mantine gives accessible, labelled form fields and an app shell without custom CSS. Vitest
+  reuses Vite's configuration, so tests compile the code the way the build does.
+- **Rejected:**
+  - Next.js: its server rendering and route handlers would duplicate the separate API and need a
+    Node server where static files are enough.
+  - Create React App: deprecated by the React team.
+  - Redux: the app's state is server data, which TanStack Query caches and refreshes; Redux would
+    hold copies of it by hand.
+  - Tailwind alone: every form field, label, error message and layout would be built and made
+    accessible by hand.
+  - Jest for the web app: it needs its own TypeScript and ESM transform next to Vite's.
+  - React Router's data and framework modes: loaders would duplicate TanStack Query, and the
+    framework mode adds a build plugin and file conventions.

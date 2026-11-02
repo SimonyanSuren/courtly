@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  // The browser app and its tests (which run in jsdom).
+  "compilerOptions": {
+    /* Language and environment */
+    // Vite builds for the browsers in Baseline Widely Available, which support ES2023. Vite
+    // transforms syntax but adds no polyfills, so newer built-ins must stay out of the types.
+    "target": "es2023",
+    "lib": ["es2023", "dom"],
+    "jsx": "react-jsx",
+    // Types for CSS imports and import.meta.env. Listing them also keeps Node's globals out.
+    "types": ["vite/client"],
+
+    /* Modules: Vite bundles them */
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    // Vite compiles each file on its own, without type information.
+    "isolatedModules": true,
+    "noEmit": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo"
+  },
+  "include": ["src"]
+}

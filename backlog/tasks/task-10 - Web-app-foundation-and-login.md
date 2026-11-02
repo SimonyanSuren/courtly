@@ -1,9 +1,12 @@
 ---
 id: TASK-10
 title: Web app foundation and login
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@SimonyanSuren'
+  - '@claude'
 created_date: '2026-11-01T23:42:00Z'
+updated_date: '2026-11-02T21:44:00Z'
 labels:
   - web
 dependencies:
@@ -26,3 +29,9 @@ Both roles use the product through a browser, and it must be usable without read
 - [ ] #3 API errors are shown in plain words, never as raw responses or stack traces
 - [ ] #4 The web app calls the API under `/api` on its own origin, so the browser needs no CORS
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Foundation in place: login page, role-based start pages, errors from Problem Details, Vite proxy for /api. Criterion 2 can be verified end to end once the login API (TASK-4) and the seeded users (TASK-9) exist.
+<!-- SECTION:NOTES:END -->

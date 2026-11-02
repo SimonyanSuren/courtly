@@ -121,7 +121,12 @@ the tests cover them.
 - **Chosen:** in `apps/api/src`, technical capabilities live in `platform/` (config, database,
   health, http) and business areas in `modules/`, one folder each, created when it has content.
   `app.module.ts` is the only file that imports every module. Lint rejects any import from
-  `platform/` into `modules/`. How a module is organised inside is decided with the first one.
+  `platform/` into `modules/`.
+- **Inside a module:** the Nest CLI layout. The module, controller, service and repository files
+  sit at the top; `entities/` holds the Drizzle tables, `dto/` the request schemas, and `guards/`
+  or `decorators/` appear where a module has them. Business rules that need neither the database
+  nor HTTP, such as opening hours or the cancellation window, are pure functions in a `domain/`
+  folder, tested without Nest; services call them and turn a broken rule into an `ApiError`.
 - **Why:** Nest recommends one feature module per area. Keeping them apart from the technical code
   shows what the product does at a glance, and technical code can then never come to depend on
   business code.
@@ -133,3 +138,7 @@ the tests cover them.
   - Splitting technical code into `platform/` (infrastructure) and `app/` (framework parts): every
     piece here is both, and `app/` would be ambiguous next to `app.module.ts`.
   - Folders by technical type (`controllers/`, `services/`): one feature would touch every folder.
+  - Layers in every module (`application/`, `domain/`, `infrastructure/`), as in Clean
+    Architecture: each module here has a handful of rules and one database, so the layers would
+    add indirection with nothing to swap behind them. The `domain/` folder keeps their main
+    benefit, rules testable on their own.

@@ -27,6 +27,7 @@ describe('GET /api/health', () => {
     await request(app.getHttpServer()).get('/api/health').expect(200);
 
     // What a database restart does: end every other session, including the pool's idle one.
+    // Only in this worker's database, so other test files running in parallel keep theirs.
     // Waits for 'remove', which the pool emits once it has discarded the dead connection. Not
     // for 'error', nor with events.once(): both add an 'error' listener that would hide a
     // missing one in the app.
@@ -34,7 +35,8 @@ describe('GET /api/health', () => {
     const connectionLost = new Promise((resolve) => pool.once('remove', resolve));
     const admin = new Pool({ connectionString: process.env.DATABASE_URL });
     await admin.query(
-      'select pg_terminate_backend(pid) from pg_stat_activity where pid <> pg_backend_pid()',
+      `select pg_terminate_backend(pid) from pg_stat_activity
+       where datname = current_database() and pid <> pg_backend_pid()`,
     );
     await admin.end();
     await connectionLost;

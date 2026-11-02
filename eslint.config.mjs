@@ -314,6 +314,14 @@ export default defineConfig(
       ],
     },
   },
+  {
+    name: 'api-tests',
+    files: ['apps/api/**/*.spec.ts', 'apps/api/test/**/*.ts'],
+    rules: {
+      // Tests create users with made-up passwords and hashes; none of them is a credential.
+      'sonarjs/no-hardcoded-passwords': 'off',
+    },
+  },
 
   /* ─────────────────────── JavaScript: tool configs (*.js, *.mjs) ──────────────── */
   {

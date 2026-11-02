@@ -3,7 +3,7 @@
   "workspaces": {
     ".": {},
     "apps/api": {
-      "entry": ["src/main.ts"]
+      "entry": ["src/main.ts", "src/migrate.ts"]
     }
   }
 }

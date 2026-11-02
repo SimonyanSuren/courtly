@@ -3,7 +3,9 @@
 /** @type {import('jest').Config} */
 export default {
   transform: { '^.+\\.ts$': 'ts-jest' },
-  // One PostgreSQL container for the whole run (Testcontainers; Docker must be running).
+  // One PostgreSQL container for the whole run (Testcontainers; Docker must be running), with a
+  // migrated database for each worker.
   globalSetup: '<rootDir>/test/global-setup.ts',
   globalTeardown: '<rootDir>/test/global-teardown.ts',
+  setupFiles: ['<rootDir>/test/use-worker-database.ts'],
 };

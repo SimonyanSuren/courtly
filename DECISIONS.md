@@ -67,3 +67,26 @@ the tests and the commit messages carry the detail.
   requirements, and tasks still open at the end become the README's next steps.
 - **Rejected:** GitHub Issues, Jira or Linear: they live outside the repository, and Jira or
   Linear boards are not visible to anyone reading it.
+
+## 6. Booking rules the requirements leave open
+
+Each rule is the simplest one consistent with the stated requirements. The API enforces them and
+the tests cover them.
+
+- **Deactivating a court** stops new bookings and keeps the existing ones, past and future.
+  Cancelling future bookings automatically would need a way to tell customers, which the app does
+  not have.
+- **Changing a court's opening hours** leaves existing bookings as they are. Hours are checked when
+  a booking is made.
+- **Opening hours are whole hours** between 00:00 and 24:00, opening before closing. Slots then
+  always line up with the 1-hour grid, and a court's day never crosses midnight.
+- **One facility, in Europe/Lisbon.** Availability and the admin day view use calendar days in
+  that time zone, so a day lasts 23 or 25 hours when the clocks change.
+- **"Up to 2 hours before" includes the boundary:** a booking that starts at 18:00 can be
+  cancelled until exactly 16:00.
+- **Expected revenue** is the sum of a day's confirmed bookings, each at the price it was booked
+  at. Cancelled bookings are listed but not counted, and a later price change does not rewrite
+  what a booking was worth.
+- **Admins manage courts and see all bookings; they do not book or cancel.** Booking and
+  cancelling are user actions, and cancelling on a customer's behalf would need a way to notify
+  them.

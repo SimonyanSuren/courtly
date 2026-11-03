@@ -15,6 +15,7 @@
     "start:prod": "node --enable-source-maps dist/main.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node --enable-source-maps --env-file-if-exists=.env dist/migrate.js",
+    "db:seed": "node --enable-source-maps --env-file-if-exists=.env dist/seed.js",
     "typecheck": "tsc -p tsconfig.json",
     "test": "NODE_OPTIONS='--experimental-vm-modules --disable-warning=ExperimentalWarning' jest"
   },

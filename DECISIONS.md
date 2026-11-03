@@ -120,7 +120,8 @@ the tests cover them.
 
 - **Chosen:** in `apps/api/src`, technical capabilities live in `platform/` (clock, config,
   database, health, http) and business areas in `modules/`, one folder each, created when it has
-  content. `app.module.ts` is the only file that imports every module. Lint rejects any import
+  content. `app.module.ts` is the only file that wires every module together; the seed beside
+  it imports their tables. Lint rejects any import
   from `platform/` into `modules/`.
 - **Inside a module:** the Nest CLI layout. The module, controller, service and repository files
   sit at the top, next to `<name>.schema.ts`, the module's Drizzle tables. `dto/` holds the Zod
@@ -184,8 +185,9 @@ the tests cover them.
 - **Chosen:** each app has a multi-stage Dockerfile in its own folder (`apps/api/Dockerfile`),
   built from the repository root, with its allowlist in `Dockerfile.dockerignore` next to it. The
   runtime image is Node 26 on Debian slim with production dependencies only; its files belong to
-  root and it runs as UID 1000. Compose starts PostgreSQL, then a one-off `migrate` service, then
-  the API, each waiting for a health check or for the previous step to exit successfully. The
+  root and it runs as UID 1000. Compose starts PostgreSQL, then one-off `migrate` and `seed`
+  services, then the API, each waiting for a health check or for the previous step to exit
+  successfully. The
   containers run with a read-only filesystem and no Linux capabilities.
 - **Why:** npm workspaces share one lockfile at the root, so the root is the build context; the
   Dockerfile-specific ignore file still sends each build only the files it needs. Migrations run
@@ -503,3 +505,27 @@ the tests cover them.
   - Jest's fake timers for the time now: they replace timers and `Date` for the whole process,
     the database driver's and the HTTP client's included.
   - Formatting times in the service: it mixed the rules with the JSON shape.
+
+## 23. Demo data: seeded once into a fresh database, placed around today
+
+- **Chosen:** `src/seed.ts`, compiled with the API like `migrate.ts`, runs as a one-off Compose
+  service after the migrations and before the API; outside Docker it is `npm run db:seed`. It
+  inserts 3 accounts (password `courtly-demo`), 5 courts of 4 sports, one of them inactive, and 13
+  bookings on Lisbon calendar days from a week ago to 2 days ahead, some cancelled. It writes the
+  tables directly, in one transaction, and changes nothing when the database has any user. Each
+  booking passes `checkBooking` at the moment it was supposedly made: 3 days before it starts, or
+  3 days before now if it starts later.
+- **Why:** the demo must have upcoming bookings whenever it is started, so its dates follow the
+  current date. A database with users holds earlier or real data that a seed must not touch;
+  `docker compose down -v` gives a fresh one. One transaction means a failed seed leaves nothing
+  behind, and the unique email makes a second run started at the same moment fail instead of
+  duplicating. The service rightly refuses bookings in the past, so the seed writes the tables,
+  checked by the rule function the service uses.
+- **Rejected:**
+  - A data migration: migrations run in every environment, and their dates cannot follow today.
+  - Seeding when the API starts: several instances would race, and the API would carry demo
+    code.
+  - Upserting row by row (`on conflict do nothing`): bookings have no natural key, and a rerun
+    would bring back rows someone had deleted.
+  - A table recording that the seed ran: an existing user already tells.
+  - Fixed dates: the upcoming bookings would be in the past within days.

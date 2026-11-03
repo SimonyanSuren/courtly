@@ -1,13 +1,15 @@
-# Courtly from a fresh clone, with only Docker: PostgreSQL, then the migrations, then the API,
-# then the web app.
+# Courtly from a fresh clone, with only Docker: PostgreSQL, then the migrations, then the demo
+# data, then the API, then the web app.
 #
 #   docker compose up                      build and start everything; Ctrl+C stops it
 #   docker compose up -d --wait            the same in the background, until all are healthy
 #   docker compose up -d --wait postgres   only PostgreSQL, for `npm run start:dev`
 #   docker compose down                    stop everything, keeping the data
-#   docker compose down -v                 stop everything and delete the data
+#   docker compose down -v                 stop everything and delete the data; the next `up`
+#                                          seeds the demo data again
 #
-# The app is at http://localhost:8080 and calls the API under /api on that origin. The API also
+# The app is at http://localhost:8080 and calls the API under /api on that origin. Log in as
+# admin@example.com, ana@example.com or rui@example.com, password courtly-demo. The API also
 # answers directly on http://127.0.0.1:3000/api; GET /api/health checks it and its database. The
 # tests start their own PostgreSQL.
 # Ports bind to 127.0.0.1: Docker publishes on all interfaces by default, and its NAT rules
@@ -76,11 +78,22 @@ services:
       postgres:
         condition: service_healthy
 
+  # Fills a fresh database with demo accounts, courts and bookings around today, then exits. A
+  # database that already has users is left as it is, so every later `up` keeps the data.
+  seed:
+    <<: *api
+    command: [node, --enable-source-maps, dist/seed.js]
+    healthcheck:
+      disable: true
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
   api:
     <<: *api
     ports: ['127.0.0.1:3000:3000']
     depends_on:
-      migrate:
+      seed:
         condition: service_completed_successfully
 
   # nginx: the built app, with /api/ passed to the API. Its health check comes from the image.

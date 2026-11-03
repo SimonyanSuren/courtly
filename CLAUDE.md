@@ -8,15 +8,19 @@ Run from the repository root; each one covers every workspace.
 
 - `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, `npm run knip`,
   `npm run format:check`
-- `docker compose up`: the whole stack from production images (PostgreSQL, migrations, the API on
-  127.0.0.1:3000, the web app on http://localhost:8080); `docker compose down -v` also deletes the
-  data
+- `docker compose up`: the whole stack from production images (PostgreSQL, migrations, demo data,
+  the API on 127.0.0.1:3000, the web app on http://localhost:8080); `docker compose down -v` also
+  deletes the data, and the next `up` seeds the demo data again. Restart with `down` and `up`:
+  `docker compose restart` ignores the start order.
 - `docker compose up -d --wait postgres`, then `npm run start:dev -w apps/api`: the API with
   reload (copy `apps/api/.env.example` to `apps/api/.env` first)
 - Database schema: tables are declared in `apps/api/src/modules/**/*.schema.ts`. After a
   change, `npm run db:generate -w apps/api -- --name <change>` writes the SQL migration to
   `apps/api/migrations/` (review and commit it); `npm run build -w apps/api`, then
   `npm run db:migrate -w apps/api` applies pending migrations.
+- `npm run db:seed -w apps/api`, after `db:migrate`: demo data placed around today, into a database
+  with no users (otherwise it changes nothing). Log in as admin@example.com, ana@example.com or
+  rui@example.com with the password `courtly-demo`.
 - API tests import `describe`, `it` and `expect` from `@jest/globals`; HTTP tests live in
   `apps/api/test/` and boot the app with `createTestApp()`, unit tests sit next to the code as
   `*.spec.ts`. `npm test` needs Docker: it starts its own PostgreSQL with Testcontainers.

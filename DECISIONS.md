@@ -290,3 +290,28 @@ the tests cover them.
   - Nonces or hashes instead of inline styles: static files cannot carry a nonce that changes
     with every response, and hashes break with every theme change.
   - nginx's `resolver` pointed at Docker's DNS: more configuration, tied to Docker's address.
+
+## 15. Web app data: facility time, refresh after a change, and the session
+
+- **Chosen:**
+  - Dates and times show on the facility's clock (Europe/Lisbon), whatever the device's time zone,
+    in one locale (`en-GB`: day before month, 24-hour clock), formatted with the browser's `Intl`.
+    The web tests run as a device in New York (`TZ=America/New_York`), so a time shown in the
+    device's zone fails them on every machine.
+  - After a booking or a cancellation, accepted or refused, the app refetches the day's slots and
+    the user's bookings: a refusal means the server knows something newer, such as a slot just
+    taken. The date is a native date input.
+  - A 401 to any request while logged in means the session expired or ended elsewhere: the app
+    logs out and shows the login page. Logging out, by either path, removes every cached answer.
+  - Requests are retried only when no answer arrived or the server failed; a 4xx would come back
+    the same.
+- **Why:** a court opens at 08:00 Lisbon time for everyone, so a visitor abroad must not see it
+  shifted. The server decides whether a slot is free, so the screens show what it last said and
+  ask again after every change. A browser can be shared, so the next person on it must not see
+  the previous user's bookings.
+- **Rejected:**
+  - Optimistic updates: the slot would show as booked before the server agreed, and vanish when
+    it refuses.
+  - A date library or Mantine's date picker (`@mantine/dates` and `dayjs`): the screens only
+    format moments the API sends and pick a day, which `Intl` and the native input do without a
+    dependency.

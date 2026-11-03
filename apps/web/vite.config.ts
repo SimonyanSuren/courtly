@@ -15,5 +15,8 @@ export default defineConfig({
     setupFiles: ['src/test-setup.ts'],
     // Tests replace fetch with vi.stubGlobal; each test starts with the real one again.
     unstubGlobals: true,
+    // The tests run as a device in New York, so a time shown in the device's zone instead of
+    // Lisbon's fails them on every machine, one in Lisbon included.
+    env: { TZ: 'America/New_York' },
   },
 });

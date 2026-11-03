@@ -1,10 +1,12 @@
 import { cleanup } from '@testing-library/react';
-import { afterEach } from 'vitest';
+import { afterEach, vi } from 'vitest';
 
-// Testing Library unmounts after each test by itself only when the test functions are globals;
-// here they are imported.
 afterEach(() => {
+  // Testing Library unmounts after each test by itself only when the test functions are globals;
+  // here they are imported.
   cleanup();
+  // A test that fixes the clock leaves the next one the real time.
+  vi.useRealTimers();
 });
 
 // jsdom has no media queries, and Mantine asks one for the preferred color scheme. This one never

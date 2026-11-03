@@ -1,4 +1,6 @@
 import {
+  hashKey,
+  type QueryClient,
   useMutation,
   type UseMutationResult,
   useQuery,
@@ -23,6 +25,30 @@ interface Credentials {
 }
 
 const currentUserKey = ['auth', 'me'];
+
+/**
+ * Logs the user out of the app: nobody is logged in any more, and every answer fetched for them is
+ * forgotten, so the next person on this browser sees none of it. The current-user query stays,
+ * set to null, because the pages that read it are told only about changes to it, not its removal.
+ */
+function endSession(queryClient: QueryClient): void {
+  queryClient.setQueryData(currentUserKey, null);
+  queryClient.removeQueries({ predicate: (query) => query.queryHash !== hashKey(currentUserKey) });
+}
+
+/**
+ * A 401 to any request once logged in means the session expired or ended elsewhere, so the app
+ * logs out too and the login page shows. At login itself, a 401 only means wrong credentials.
+ */
+export function endSessionIfUnauthorized(queryClient: QueryClient, error: Error): void {
+  if (
+    error instanceof ApiError &&
+    error.status === 401 &&
+    queryClient.getQueryData(currentUserKey)
+  ) {
+    endSession(queryClient);
+  }
+}
 
 /** Where each role lands after logging in. */
 export function homePath(role: Role): string {
@@ -74,7 +100,7 @@ export function useLogout(): UseMutationResult<void, Error, void> {
       await apiRequest('/auth/logout', { method: 'POST' });
     },
     onSuccess: () => {
-      queryClient.setQueryData(currentUserKey, null);
+      endSession(queryClient);
     },
   });
 }

@@ -26,6 +26,7 @@
 !apps/web/src/
 apps/web/src/**/*.spec.tsx
 apps/web/src/test-setup.ts
+apps/web/src/test-utils.tsx
 
 # The web server's configuration.
 !apps/web/nginx.conf

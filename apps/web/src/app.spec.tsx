@@ -1,83 +1,19 @@
-import { MantineProvider } from '@mantine/core';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
-import { describe, expect, it, type Mock, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { App } from './app';
+import { alertText, ana, logIn, problem, renderApp, stubApi } from './test-utils';
 
-const ana = { id: 'u1', email: 'ana@example.com', name: 'Ana Silva', role: 'user' };
 const admin = { id: 'u2', email: 'admin@example.com', name: 'Rui Admin', role: 'admin' };
 
-function problem(status: number, code: string, detail: string, errors?: unknown[]): Response {
-  return Response.json(
-    { type: 'about:blank', status, detail, code, errors },
-    { status, headers: { 'Content-Type': 'application/problem+json' } },
-  );
-}
-
 const loggedOut = problem(401, 'UNAUTHORIZED', 'Log in to continue.');
-
-type FetchMock = Mock<(path: string, init?: RequestInit) => Promise<Response>>;
-
-/**
- * Replaces fetch with a table of "METHOD path" to its response. A TypeError stands for a request
- * that got no response, which is how fetch reports a network failure.
- */
-function stubApi(responses: Record<string, Response | TypeError>): FetchMock {
-  const fetchMock: FetchMock = vi.fn((path: string, init?: RequestInit) => {
-    const request = `${init?.method ?? 'GET'} ${path}`;
-    const response = responses[request];
-
-    if (response === undefined) {
-      return Promise.reject(new Error(`Unexpected request: ${request}`));
-    }
-
-    return response instanceof Response
-      ? Promise.resolve(response.clone())
-      : Promise.reject(response);
-  });
-  vi.stubGlobal('fetch', fetchMock);
-
-  return fetchMock;
-}
-
-function renderApp(path: string): void {
-  // No retries, so a failed request shows its error at once.
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(
-    // The test environment turns off transitions, so content appears without waiting.
-    <MantineProvider env="test">
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={[path]}>
-          <App />
-        </MemoryRouter>
-      </QueryClientProvider>
-    </MantineProvider>,
-  );
-}
-
-async function logIn(email: string, password: string): Promise<void> {
-  const user = userEvent.setup();
-  // Anchored: the labels end with the required-field asterisk, and the password visibility
-  // toggle mentions "password" too.
-  await user.type(await screen.findByLabelText(/^Email/), email);
-  await user.type(screen.getByLabelText(/^Password/), password);
-  await user.click(screen.getByRole('button', { name: 'Log in' }));
-}
-
-async function alertText(): Promise<string | null> {
-  const alert = await screen.findByRole('alert');
-
-  return alert.textContent;
-}
 
 describe('logging in', () => {
   it('sends the credentials and takes a user to the Courts page', async () => {
     const fetchMock = stubApi({
       'GET /api/auth/me': loggedOut,
       'POST /api/auth/login': Response.json(ana),
+      'GET /api/courts': Response.json([]),
     });
     renderApp('/login');
 
@@ -163,7 +99,7 @@ describe('logging in', () => {
 
 describe('the session', () => {
   it('survives a reload: the app asks the API who is logged in', async () => {
-    stubApi({ 'GET /api/auth/me': Response.json(ana) });
+    stubApi({ 'GET /api/auth/me': Response.json(ana), 'GET /api/courts': Response.json([]) });
     renderApp('/');
 
     expect(await screen.findByRole('heading', { name: 'Courts' })).toBeTruthy();
@@ -177,7 +113,7 @@ describe('the session', () => {
   });
 
   it('keeps a user out of admin pages', async () => {
-    stubApi({ 'GET /api/auth/me': Response.json(ana) });
+    stubApi({ 'GET /api/auth/me': Response.json(ana), 'GET /api/courts': Response.json([]) });
     renderApp('/admin');
 
     expect(await screen.findByRole('heading', { name: 'Courts' })).toBeTruthy();
@@ -192,9 +128,21 @@ describe('the session', () => {
     expect(screen.queryByRole('heading', { name: 'Courts' })).toBeNull();
   });
 
+  it('ends when the API stops accepting it, and the login page shows', async () => {
+    stubApi({
+      'GET /api/auth/me': Response.json(ana),
+      // The session expired while the user was away.
+      'GET /api/bookings': loggedOut,
+    });
+    renderApp('/bookings');
+
+    expect(await screen.findByRole('button', { name: 'Log in' })).toBeTruthy();
+  });
+
   it('ends on logout and returns to the login page', async () => {
     const fetchMock = stubApi({
       'GET /api/auth/me': Response.json(ana),
+      'GET /api/courts': Response.json([]),
       'POST /api/auth/logout': new Response(null, { status: 204 }),
     });
     renderApp('/courts');
@@ -203,5 +151,28 @@ describe('the session', () => {
 
     expect(await screen.findByRole('button', { name: 'Log in' })).toBeTruthy();
     expect(fetchMock).toHaveBeenCalledWith('/api/auth/logout', { method: 'POST' });
+  });
+});
+
+describe('the header', () => {
+  it("links the user's pages and marks the current one", async () => {
+    const user = userEvent.setup();
+    stubApi({
+      'GET /api/auth/me': Response.json(ana),
+      'GET /api/courts': Response.json([]),
+      'GET /api/bookings': Response.json({ upcoming: [], past: [] }),
+    });
+    renderApp('/courts');
+
+    await user.click(await screen.findByRole('link', { name: 'My bookings' }));
+
+    expect(await screen.findByRole('heading', { name: 'My bookings' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'My bookings' }).getAttribute('aria-current')).toBe(
+      'page',
+    );
+
+    await user.click(screen.getByRole('link', { name: 'Courts' }));
+
+    expect(await screen.findByRole('heading', { name: 'Courts' })).toBeTruthy();
   });
 });

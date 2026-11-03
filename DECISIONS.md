@@ -266,3 +266,27 @@ the tests cover them.
     that has no alternative.
   - A version in a header or in the media type: the same lack of need, and invisible in URLs and
     logs.
+
+## 14. Web image: static files and the API proxy on nginx
+
+- **Chosen:** `apps/web/Dockerfile` builds the app with Vite on the API's Node image and serves
+  `dist/` from nginx's unprivileged image (stable, Alpine slim). It runs as UID 101 on port 8080
+  with a read-only filesystem and one tmpfs for `/tmp`. nginx passes `/api/` to the API with the
+  browser's Host header unchanged (`$http_host`), answers every other path with `index.html`,
+  caches the hashed files in `/assets/` for a year as immutable, and has browsers revalidate
+  `index.html` on every load. Every response carries `X-Content-Type-Options: nosniff`,
+  `Referrer-Policy: same-origin` and a Content Security Policy that allows only this origin,
+  inline styles (Mantine adds `<style>` elements at run time) and no framing.
+- **Why:** one origin for the app and the API keeps the session cookie first-party and needs no
+  CORS. Nest's cross-origin check compares Origin with Host when Sec-Fetch-Site is missing; with
+  nginx's default Host (`api:3000`) or `$host` (no port), same-origin requests would be rejected.
+  nginx looks up the API's address only at start, so Compose restarts it whenever it replaces the
+  API container; otherwise the proxy answers 502 while its own health check passes.
+- **Rejected:**
+  - Caddy: its official image runs as root and writes state to `/config` and `/data`.
+  - `vite preview`, or the API serving the files: either puts Node in the web image.
+  - `Referrer-Policy: no-referrer`: browsers then send `Origin: null` on form posts, which the
+    cross-origin check rejects.
+  - Nonces or hashes instead of inline styles: static files cannot carry a nonce that changes
+    with every response, and hashes break with every theme change.
+  - nginx's `resolver` pointed at Docker's DNS: more configuration, tied to Docker's address.

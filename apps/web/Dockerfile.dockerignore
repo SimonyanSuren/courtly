@@ -1,0 +1,37 @@
+# Allowlist of the files the web image's build may read. Docker uses it instead of a root
+# .dockerignore because it sits next to apps/web/Dockerfile and carries its name, so each app's
+# image keeps its own list. Paths are relative to the build context, the repository root.
+#
+# Everything else (.env files, .git, node_modules, dist, the other apps) never reaches the
+# builder, so it cannot leak into a layer or invalidate the build cache. A new file stays out
+# until it is added here; with a denylist, forgetting a new secret file would leak it silently.
+# A missing entry fails loudly at COPY ("not found").
+*
+
+# Dependency manifests and npm settings (ignore-scripts=true).
+!package.json
+!package-lock.json
+!.npmrc
+!apps/web/package.json
+
+# Build configuration and the HTML entry point.
+!tsconfig.base.json
+!apps/web/tsconfig.json
+!apps/web/tsconfig.app.json
+!apps/web/tsconfig.node.json
+!apps/web/vite.config.ts
+!apps/web/index.html
+
+# Application source, without tests: editing a test does not rebuild the image.
+!apps/web/src/
+apps/web/src/**/*.spec.tsx
+apps/web/src/test-setup.ts
+
+# The web server's configuration.
+!apps/web/nginx.conf
+
+# Secret-shaped files stay out even inside an allowed folder. Must stay last: the last matching
+# line wins.
+**/.env*
+**/*.pem
+**/*.key

@@ -6,7 +6,7 @@ assignee:
   - '@SimonyanSuren'
   - '@claude'
 created_date: '2026-11-01T23:42:00Z'
-updated_date: '2026-11-02T21:41:00Z'
+updated_date: '2026-11-03T00:09:00Z'
 labels:
   - infra
 dependencies:
@@ -34,5 +34,5 @@ Running the project must take one command from a fresh clone, on a machine that 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-The API part is in place: apps/api/Dockerfile and Compose services postgres, migrate (one-off) and api, gated by health checks. Still to add: the seed service and the web app's image and service.
+The API and the web app are in place: apps/api/Dockerfile and apps/web/Dockerfile, and Compose services postgres, migrate (one-off), api and web, gated by health checks. Still to add: the seed service.
 <!-- SECTION:NOTES:END -->

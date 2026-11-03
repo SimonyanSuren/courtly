@@ -1,12 +1,14 @@
-# Courtly from a fresh clone, with only Docker: PostgreSQL, then the migrations, then the API.
+# Courtly from a fresh clone, with only Docker: PostgreSQL, then the migrations, then the API,
+# then the web app.
 #
 #   docker compose up                      build and start everything; Ctrl+C stops it
-#   docker compose up -d --wait            the same in the background, until the API is healthy
+#   docker compose up -d --wait            the same in the background, until all are healthy
 #   docker compose up -d --wait postgres   only PostgreSQL, for `npm run start:dev`
 #   docker compose down                    stop everything, keeping the data
 #   docker compose down -v                 stop everything and delete the data
 #
-# The API answers on http://127.0.0.1:3000/api; GET /api/health checks it and its database. The
+# The app is at http://localhost:8080 and calls the API under /api on that origin. The API also
+# answers directly on http://127.0.0.1:3000/api; GET /api/health checks it and its database. The
 # tests start their own PostgreSQL.
 # Ports bind to 127.0.0.1: Docker publishes on all interfaces by default, and its NAT rules
 # bypass host firewalls such as ufw. Credentials are local-only and match apps/api/.env.example.
@@ -77,6 +79,28 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+
+  # nginx: the built app, with /api/ passed to the API. Its health check comes from the image.
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    image: courtly-web
+    # As for the API: rebuild on every `up`, so it serves the code that is checked out.
+    pull_policy: build
+    ports: ['127.0.0.1:8080:8080']
+    # nginx writes only its pid file and the temporary files of large requests and responses,
+    # all under /tmp, which stays writable, in memory.
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    depends_on:
+      api:
+        condition: service_healthy
+        # nginx looks up the API's address once, at start. When Compose replaces the API
+        # container, which may get a new address, it restarts nginx too; otherwise: 502.
+        restart: true
 
 volumes:
   postgres-data:

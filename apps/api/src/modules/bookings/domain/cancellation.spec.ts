@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { canCancel } from './cancellation';
+import { canCancel, cancellableUntil } from './cancellation';
 
 function canCancelAt(start: string, now: string): boolean {
   return canCancel(Temporal.Instant.from(start), Temporal.Instant.from(now));
@@ -34,5 +34,15 @@ describe('canCancel', () => {
 
     expect(canCancelAt(booking.start, booking.lastChance)).toBe(true);
     expect(canCancelAt(booking.start, oneMsLater.toString())).toBe(false);
+  });
+});
+
+describe('cancellableUntil', () => {
+  it.each([
+    { start: '2026-07-15T18:00:00+01:00', until: '2026-07-15T15:00:00Z' },
+    // 03:00 in summer time, 2 real hours after midnight in winter time.
+    { start: '2026-03-29T03:00:00+01:00', until: '2026-03-29T00:00:00Z' },
+  ])('is exactly 2 real hours before the start: $start until $until', ({ start, until }) => {
+    expect(cancellableUntil(Temporal.Instant.from(start)).toString()).toBe(until);
   });
 });

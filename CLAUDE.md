@@ -31,7 +31,7 @@ Run from the repository root; each one covers every workspace.
 
 ## Structure
 
-`apps/api/src/platform/` holds technical capabilities (config, database, health, http);
+`apps/api/src/platform/` holds technical capabilities (clock, config, database, health, http);
 `apps/api/src/modules/` holds business areas. `platform/` never imports `modules/` (lint enforces
 it). See DECISIONS.md, entry 8. Fixed value sets are enum-like const objects in a module's
 `domain/` (`Role.ADMIN`), and each module's errors are functions in `<module>.errors.ts`

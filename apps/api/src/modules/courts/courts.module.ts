@@ -8,5 +8,8 @@ import { CourtsService } from './courts.service';
 @Module({
   controllers: [CourtsController],
   providers: [CourtsService, CourtsRepository],
+  // Bookings read courts through the service, so the rule that hides inactive courts from users
+  // stays in one place.
+  exports: [CourtsService],
 })
 export class CourtsModule {}

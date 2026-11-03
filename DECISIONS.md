@@ -118,17 +118,19 @@ the tests cover them.
 
 ## 8. Code structure: `src/platform/` and `src/modules/`
 
-- **Chosen:** in `apps/api/src`, technical capabilities live in `platform/` (config, database,
-  health, http) and business areas in `modules/`, one folder each, created when it has content.
-  `app.module.ts` is the only file that imports every module. Lint rejects any import from
-  `platform/` into `modules/`.
+- **Chosen:** in `apps/api/src`, technical capabilities live in `platform/` (clock, config,
+  database, health, http) and business areas in `modules/`, one folder each, created when it has
+  content. `app.module.ts` is the only file that imports every module. Lint rejects any import
+  from `platform/` into `modules/`.
 - **Inside a module:** the Nest CLI layout. The module, controller, service and repository files
-  sit at the top, next to `<name>.schema.ts`, the module's Drizzle tables; `dto/` holds the Zod
-  schemas that validate requests, and `guards/` or `decorators/` appear where a module has them. A
-  part of a module with several files of its own gets a folder, such as `auth/sessions/` (table,
-  repository, cookie and token). Business rules that need neither the database nor HTTP, such as
-  opening hours or the cancellation window, are pure functions in a `domain/` folder, tested
-  without Nest; services call them and turn a broken rule into an `ApiError`.
+  sit at the top, next to `<name>.schema.ts`, the module's Drizzle tables. `dto/` holds the Zod
+  schemas that validate requests and, where the JSON differs from the module's values, the
+  response types and the functions that build them (`bookings/dto/responses.ts`). `guards/` or
+  `decorators/` appear where a module has them. A part of a module with several files of its own
+  gets a folder, such as `auth/sessions/` (table, repository, cookie and token). Business rules
+  that need neither the database nor HTTP, such as opening hours or the cancellation window, are
+  pure functions in a `domain/` folder, tested without Nest; services call them and turn a broken
+  rule into an `ApiError`.
 - **Why:** Nest recommends one feature module per area. Keeping them apart from the technical code
   shows what the product does at a glance, and technical code can then never come to depend on
   business code.
@@ -266,6 +268,12 @@ the tests cover them.
     that has no alternative.
   - A version in a header or in the media type: the same lack of need, and invisible in URLs and
     logs.
+  - A success envelope such as `{ data }` around every response: the status code already says
+    whether a request worked, and every client would unwrap every call. Only `GET /api/courts`
+    answers a bare array, and a facility's courts need no paging; a list that does would get
+    `{ items, nextCursor }`.
+  - Response types shared with the web app through a package: a mismatch would fail the build,
+    but it needs a new workspace and changes to both images. It is a next step.
 
 ## 14. Web image: static files and the API proxy on nginx
 
@@ -458,3 +466,38 @@ the tests cover them.
   - Docker layer caching through `docker/build-push-action`: two more actions to pin, for a job
     that runs alongside the longer `checks`.
   - One job per check: each would repeat the checkout and `npm ci`.
+
+## 22. Bookings: overlaps refused by the database, the time now injected
+
+- **Chosen:** an exclusion constraint, `bookings_no_overlap`, with the `btree_gist` extension:
+  `EXCLUDE USING gist (court_id WITH =, tstzrange(starts_at, ends_at, '[)') WITH &&)`
+  `WHERE (status = 'confirmed')`. Its violation, SQLSTATE 23P01 matched by the constraint's
+  name, answers 409 `SLOT_TAKEN`; nothing looks for a free slot first. It lives in a hand-written
+  migration (`drizzle-kit generate --custom`): Drizzle cannot declare it, and its snapshots never
+  contain it, so later generated migrations never drop it. Cancelling is an update on the
+  condition that the booking is still confirmed. Every rule a row can be checked against on its
+  own is a CHECK: 1 or 2 hours, the end exactly that many real hours after the start, a positive
+  price, and a cancellation time exactly when cancelled. Courts and users with bookings cannot be
+  deleted. A booking stores its price. The time now comes from an injectable `Clock` that tests
+  replace. Availability lives in the bookings module and reads courts through `CourtsService`.
+  Expected revenue is summed from the day view's own rows. The service works with Temporal
+  values; `dto/responses.ts` writes them as the JSON in `docs/api.md`, and the controllers call
+  it.
+- **Why:** under READ COMMITTED a lookup cannot see a booking another request has inserted but not
+  committed, so both requests would find the slot free. The constraint sees the uncommitted row:
+  the second insert waits for the first to commit, then fails. Opening hours and prices change, so
+  they are checked when booking, not by the table. Summing the listed rows keeps the total equal
+  to what is shown, and avoids `sum()`, which returns a bigint (a string from the driver) and NULL
+  on an empty day. Without the JSON shape, the service holds only the rules, and one file decides
+  how a moment is written.
+- **Rejected:**
+  - Check, then insert: the check misses uncommitted rows.
+  - Locking the court's row first: it serialises bookings in application code, and a write path
+    that skips the lock can still double book.
+  - SERIALIZABLE transactions: the losing request gets a serialization failure to retry, not a
+    violation that names the rule.
+  - One row per booked hour under a unique key: time modelled as slots, and a 2-hour booking as
+    two rows.
+  - Jest's fake timers for the time now: they replace timers and `Date` for the whole process,
+    the database driver's and the HTTP client's included.
+  - Formatting times in the service: it mixed the rules with the JSON shape.

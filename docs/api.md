@@ -74,7 +74,7 @@ interface Court {
 interface Slot {
   startsAt: string;
   endsAt: string;
-  // started: it starts at or before now; taken: a confirmed booking covers it.
+  // started: it starts at or before now, booked or not; taken: a confirmed booking covers it.
   status: 'available' | 'taken' | 'started';
 }
 
@@ -87,7 +87,7 @@ interface Booking {
   priceCents: number; // the court's hourly price when booked, times hours
   status: 'confirmed' | 'cancelled';
   cancellableUntil: string; // startsAt minus 2 hours
-  createdAt: string;
+  createdAt: string; // when the booking was stored
   cancelledAt: string | null;
 }
 
@@ -144,6 +144,8 @@ court open all day has 23 or 25 of them.
 | `POST /api/bookings/:id/cancel` | user |                                | 200 `Booking`, now cancelled                   | 404 `BOOKING_NOT_FOUND`, 409 `BOOKING_ALREADY_CANCELLED`, 422 `CANCELLATION_WINDOW_CLOSED`                      |
 
 - `hours` is 1 or 2, and `startsAt` must be on the hour.
+- `hours` other than 1 or 2, or a `courtId` that is not a UUID, answers 400 at that field.
+- An `:id` that is not a UUID answers 404 `BOOKING_NOT_FOUND`, as an unknown one does.
 - `GET /api/bookings` returns the caller's own bookings, cancelled ones included. `upcoming` holds
   those that have not ended, soonest first; `past` those that have, most recent first.
 - Cancelling is allowed up to and including `cancellableUntil`. Another user's booking answers

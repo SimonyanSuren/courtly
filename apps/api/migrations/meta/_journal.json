@@ -22,6 +22,20 @@
       "when": 1793670430923,
       "tag": "0002_create_courts",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793716304398,
+      "tag": "0003_create_bookings",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793716310437,
+      "tag": "0004_bookings_no_overlap",
+      "breakpoints": true
     }
   ]
 }

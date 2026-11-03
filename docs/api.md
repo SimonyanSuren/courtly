@@ -100,12 +100,12 @@ interface AdminBooking extends Booking {
 
 ### Login
 
-| Route                   | Role   | Body                  | Success                                     | Errors                         |
-| ----------------------- | ------ | --------------------- | ------------------------------------------- | ------------------------------ |
-| `POST /api/auth/login`  | public | `{ email, password }` | 200 `User`, and the session cookie is set   | 401 `INVALID_CREDENTIALS`, 429 |
-| `POST /api/auth/logout` | public |                       | 204, the session ends and the cookie clears |                                |
-| `GET /api/auth/me`      | any    |                       | 200 `User`                                  |                                |
-| `GET /api/health`       | public |                       | 200 `{ "status": "ok" }`                    | 503 when the database is down  |
+| Route                   | Role   | Body                  | Success                                     | Errors                                                   |
+| ----------------------- | ------ | --------------------- | ------------------------------------------- | -------------------------------------------------------- |
+| `POST /api/auth/login`  | public | `{ email, password }` | 200 `User`, and the session cookie is set   | 401 `INVALID_CREDENTIALS`, 429 `TOO_MANY_LOGIN_ATTEMPTS` |
+| `POST /api/auth/logout` | public |                       | 204, the session ends and the cookie clears |                                                          |
+| `GET /api/auth/me`      | any    |                       | 200 `User`                                  |                                                          |
+| `GET /api/health`       | public |                       | 200 `{ "status": "ok" }`                    | 503 when the database is down                            |
 
 ### Courts
 

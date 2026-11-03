@@ -7,5 +7,5 @@ export default {
   // migrated database for each worker.
   globalSetup: '<rootDir>/test/global-setup.ts',
   globalTeardown: '<rootDir>/test/global-teardown.ts',
-  setupFiles: ['<rootDir>/test/use-worker-database.ts'],
+  setupFiles: ['<rootDir>/test/use-worker-database.ts', '<rootDir>/test/login-limits.ts'],
 };

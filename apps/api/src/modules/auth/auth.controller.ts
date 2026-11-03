@@ -1,4 +1,14 @@
-import { Body, Controller, Cookies, Get, HttpCode, Inject, Post, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Cookies,
+  Get,
+  HttpCode,
+  Inject,
+  Post,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 
 import { Public } from '../../platform/http/public.decorator';
@@ -8,6 +18,7 @@ import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { Roles } from './decorators/roles.decorator';
 import { type LoginDto, loginSchema } from './dto/login.dto';
+import { LoginThrottleGuard } from './guards/login-throttle.guard';
 import { sessionCookieName, sessionCookieOptions } from './sessions/session-cookie';
 
 @Controller('auth')
@@ -20,6 +31,8 @@ export class AuthController {
 
   /** Starts a session: the token goes into the httpOnly cookie, the user into the body. */
   @Public()
+  // Counts every attempt before the body is validated or the password checked.
+  @UseGuards(LoginThrottleGuard)
   @Post('login')
   @HttpCode(200)
   async login(

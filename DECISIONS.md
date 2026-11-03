@@ -337,3 +337,27 @@ the tests cover them.
     rule engine.
   - One guard for both checks: two guards keep each check small; a test pins their order (no
     session gives 401, not 403).
+
+## 17. Login rate limit: per client address and per email
+
+- **Chosen:** Nest's `@nestjs/throttler`, on the login route only. Every attempt, successful or
+  not, counts against two limits over 15 minutes: 50 from one client address and 10 for one
+  email, trimmed and lower-cased as login compares it. One attempt too many gets 429
+  `TOO_MANY_LOGIN_ATTEMPTS` with the minutes to wait and `Retry-After` in seconds, for 15
+  minutes. No other rate-limit headers are sent. Behind nginx, which replaces `X-Forwarded-For`
+  with the address the client connected from, the API trusts exactly one proxy
+  (`TRUST_PROXY_HOPS=1`); by default it trusts none. The counters are kept in memory.
+- **Why:** the address limit stops one client trying many accounts; the email limit stops many
+  addresses guessing one account's password, which an address limit alone allows. argon2id
+  already makes each guess slow; the limits cap how many there are. Without the trusted proxy,
+  every client would share nginx's address, and one person's typos would lock everyone out.
+  Trusting the header with no proxy in front would let any client choose its own address. The
+  price: someone who knows a user's email can block that user's logins for 15 minutes, and the
+  counters reset on a restart and are per instance.
+- **Rejected:**
+  - Counting only failed attempts: it needs bookkeeping after the password check, outside the
+    throttler, and someone logging in normally does not reach 10 in 15 minutes.
+  - Locking the account until an admin unlocks it: every guessing attempt becomes a support
+    request, and an attacker can lock out anyone.
+  - Shared storage such as Redis for the counters: one more service for one API instance. The
+    throttler accepts one when the API runs as several.

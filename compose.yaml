@@ -29,6 +29,9 @@ x-api: &api
     DATABASE_URL: postgres://courtly:courtly@postgres:5432/courtly
     # The demo is served over plain HTTP on localhost, where a Secure cookie would not be kept.
     SESSION_COOKIE_SECURE: 'false'
+    # nginx in front sets X-Forwarded-For to the client's address. Port 3000 also reaches the API
+    # without nginx, but only from this machine, whose processes could send any header anyway.
+    TRUST_PROXY_HOPS: 1
   # Hardening a production runtime should also apply. The API writes nothing to disk, so the
   # filesystem is read-only; /tmp stays writable, in memory, for libraries that need scratch files.
   read_only: true

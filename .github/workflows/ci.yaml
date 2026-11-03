@@ -1,0 +1,55 @@
+# Local git hooks can be skipped, so every push runs their checks again, plus those they leave
+# out: knip, the build, the tests against PostgreSQL and the whole stack in Docker.
+name: CI
+
+on: [push, pull_request]
+
+# Every permission not listed here is none.
+permissions:
+  contents: read
+
+# A newer push to the same branch or pull request makes the older run's result obsolete.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    # A fixed release: ubuntu-latest moves to a new one on GitHub's schedule, not in a commit here.
+    runs-on: ubuntu-26.04
+    # GitHub's default is 360 minutes, as long as a hung test or container start would run.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Later steps run the dependencies' code, and none of them needs the token.
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run knip
+      - run: npm run build
+      # The API tests start PostgreSQL with Testcontainers, on the runner's own Docker.
+      - run: npm test
+
+  # The project as it is run: docker compose up. The images build from their
+  # Dockerfile.dockerignore allowlist and install each app's dependencies alone, so a file or
+  # package the checkout has but an image lacks fails here, and so does a stack that does not
+  # start: --wait waits for every health check and fails if a service stops.
+  stack:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: docker compose up --detach --wait
+      # Through nginx, as a browser reaches it: the web server, the API and its database.
+      - run: curl --fail --silent --show-error http://localhost:8080/api/health
+      - if: failure()
+        run: docker compose logs

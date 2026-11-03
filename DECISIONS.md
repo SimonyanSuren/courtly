@@ -433,3 +433,28 @@ the tests cover them.
   - One global file of error codes: the codes are each module's vocabulary, and every module
     would edit the same file.
   - Shared error instances: one object would carry the stack trace of wherever it was created.
+
+## 21. Continuous integration: GitHub Actions on every push and pull request
+
+- **Chosen:** `.github/workflows/ci.yaml` runs on every push and pull request, as two parallel
+  jobs on `ubuntu-26.04`. `checks` installs with `npm ci` on the Node version in `.nvmrc`, with
+  npm's download cache, then runs format:check, lint, typecheck, knip, the build and the tests;
+  the API tests start PostgreSQL with Testcontainers on the runner's Docker. `stack` runs
+  `docker compose up --wait`, exactly as the project is run, and checks `/api/health` through
+  nginx; on failure it prints the services' logs. The workflow's token can only read the
+  repository, and checkout does not keep it. Each action is pinned to a commit SHA, its version in
+  a comment. A newer push to the same branch or pull request cancels the older run, and a job
+  stops after 15 minutes.
+- **Why:** git hooks can be skipped, and CI shows a broken commit to anyone reading the
+  repository. The images build from their allowlists and install each app's dependencies alone,
+  so a file or package missing from an image fails in CI, and so does a stack that does not
+  start, rather than at the next `docker compose up`. A tag can be moved to other code; a commit
+  SHA cannot. A fixed runner release changes in a commit, not when GitHub moves `ubuntu-latest`.
+- **Rejected:**
+  - commitlint in CI: the commit-msg hook checks each message when it is written. On `main`,
+    which receives pushes directly, CI could only report a message already published. With pull
+    requests, `commitlint --from <base> --to <head>` would block the merge.
+  - A PostgreSQL service container: the tests start their own, as they do locally.
+  - Docker layer caching through `docker/build-push-action`: two more actions to pin, for a job
+    that runs alongside the longer `checks`.
+  - One job per check: each would repeat the checkout and `npm ci`.

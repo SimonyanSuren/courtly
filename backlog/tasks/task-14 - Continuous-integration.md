@@ -1,9 +1,12 @@
 ---
 id: TASK-14
 title: Continuous integration
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@SimonyanSuren'
+  - '@claude'
 created_date: '2026-11-01T23:42:00Z'
+updated_date: '2026-11-03T14:18:00Z'
 labels:
   - infra
 dependencies:

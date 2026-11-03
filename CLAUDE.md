@@ -22,6 +22,9 @@ Run from the repository root; each one covers every workspace.
   `*.spec.ts`. `npm test` needs Docker: it starts its own PostgreSQL with Testcontainers.
 - Jest's `toEqual` treats any two Temporal objects as equal (they have no own properties): compare
   them as ISO strings.
+- CI (`.github/workflows/ci.yaml`) runs format:check, lint, typecheck, knip, build and test, then
+  `docker compose up --wait` and a health check, on every push and pull request. Actions are
+  pinned to a full commit SHA with the version in a comment: update both together.
 - `npm run dev -w apps/web`: the web app on http://localhost:5173 with reload; it proxies `/api` to
   the API on port 3000. Web tests are `*.spec.tsx` next to the code: they import from `vitest`,
   replace `fetch` with `vi.stubGlobal` and render the app's routes with Testing Library.

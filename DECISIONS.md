@@ -237,3 +237,22 @@ the tests cover them.
   - Jest for the web app: it needs its own TypeScript and ESM transform next to Vite's.
   - React Router's data and framework modes: loaders would duplicate TanStack Query, and the
     framework mode adds a build plugin and file conventions.
+
+## 13. API contract: one documented contract, no version prefix
+
+- **Chosen:** `docs/api.md` describes every route, type and error code the web app relies on.
+  Paths start with `/api` and carry no version. Changes are additive: a field is renamed or
+  removed only once the web app no longer reads it. Versions arrive with the first client that is
+  released on its own schedule, such as a mobile app, whose installed copies stay in use for
+  months, or an API for partners.
+- **Why:** the web app is the only client. It is built from the same commit as the API, deployed
+  with it and served from the same origin, so a breaking change ships together with the code that
+  adapts to it. The one older client is a browser tab still running the previous bundle during a
+  deploy, and additive changes keep it working. Adding versions later changes no URL: with Nest's
+  URI versioning (`app.enableVersioning()`), a route without a version keeps its path, and only
+  the routes that change get `/api/v2/...`.
+- **Rejected:**
+  - `/api/v1` from the start: every URL, test, proxy rule and document would carry a version
+    that has no alternative.
+  - A version in a header or in the media type: the same lack of need, and invisible in URLs and
+    logs.

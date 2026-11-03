@@ -15,8 +15,14 @@ import { SchemaValidationPipe } from './platform/http/schema-validation.pipe';
 @Module({
   imports: [
     // Builds every configuration namespace at startup; an invalid variable stops the start.
-    // Global, so any module can inject a namespace without importing ConfigModule again.
-    ConfigModule.forRoot({ isGlobal: true, load: [httpConfig, databaseConfig, authConfig] }),
+    // Global, so any module can inject a namespace without importing ConfigModule again. Only
+    // real environment variables count: the local scripts load apps/api/.env themselves, so a
+    // developer's settings never reach the tests.
+    ConfigModule.forRoot({
+      isGlobal: true,
+      ignoreEnvFile: true,
+      load: [httpConfig, databaseConfig, authConfig],
+    }),
     DatabaseModule,
     HealthModule,
     AuthModule,

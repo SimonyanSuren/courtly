@@ -315,3 +315,25 @@ the tests cover them.
   - A date library or Mantine's date picker (`@mantine/dates` and `dayjs`): the screens only
     format moments the API sends and pick a day, which `Intl` and the native input do without a
     dependency.
+
+## 16. Roles: every route names the roles that may use it
+
+- **Chosen:** `@Roles(['admin'])`, made with Nest's `Reflector.createDecorator`, on a route or a
+  controller; a route's own list replaces its controller's. A second global guard, after the
+  session guard, answers 403 when the user's role is not in the list. A route with neither
+  `@Public()` nor `@Roles()` answers 500 to everyone, and the error, naming the route, is logged.
+  The role comes from the `users` row on every request, with the session, so a role change
+  applies at once.
+- **Why:** admins do not book, so being logged in is not enough for most routes. Like the session
+  guard, the roles guard denies by default: a route nobody decided access for stays closed, and
+  the first test that calls it shows the mistake. The contract's "any" routes, such as
+  `GET /api/auth/me`, name both roles.
+- **Rejected:**
+  - Letting a route without `@Roles()` through, as Nest's documentation example does: a
+    forgotten list on an admin route would open it to every user.
+  - A 403 for a route without `@Roles()`: the client would see a permission problem for what is
+    a server bug, and nothing would be logged.
+  - Permissions or policies, such as CASL from Nest's authorization docs: two fixed roles need no
+    rule engine.
+  - One guard for both checks: two guards keep each check small; a test pins their order (no
+    session gives 401, not 403).

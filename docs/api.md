@@ -7,7 +7,8 @@ responses are JSON; errors are Problem Details (RFC 9457).
 
 - **Sessions:** `POST /api/auth/login` starts a session kept in an httpOnly cookie, which the
   browser sends with every request. Every route needs a session unless it is marked _public_:
-  without one the answer is 401 with the code `UNAUTHORIZED`, and with the wrong role it is 403.
+  without one the answer is 401 with the code `UNAUTHORIZED`, and with the wrong role it is 403
+  with the code `FORBIDDEN`.
 - **Roles:** a `user` browses courts, books and cancels; an `admin` manages courts and sees every
   booking. Admins do not book. Each route lists the role it needs.
 - **Times:** moments are ISO 8601 strings with the facility's offset from UTC, for example

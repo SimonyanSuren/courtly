@@ -1,3 +1,6 @@
+import { type NestExpressApplication } from '@nestjs/platform-express';
+import request from 'supertest';
+
 import { PasswordHasher } from '../src/modules/auth/password-hasher';
 import { type User, users } from '../src/modules/users/users.schema';
 import { type Database } from '../src/platform/database/database';
@@ -27,4 +30,18 @@ export async function createUser(
   }
 
   return user;
+}
+
+/** Logs in as a user createUser() made; returns the `name=value` pair for the Cookie header. */
+export async function logIn(app: NestExpressApplication, email: string): Promise<string> {
+  const response = await request(app.getHttpServer())
+    .post('/api/auth/login')
+    .send({ email, password: TEST_PASSWORD });
+  const cookie = response.get('Set-Cookie')?.[0]?.split(';', 1)[0];
+
+  if (cookie === undefined || response.status !== 200) {
+    throw new Error(`Logging in as ${email} answered ${String(response.status)}.`);
+  }
+
+  return cookie;
 }

@@ -6,6 +6,7 @@ import { type PublicUser } from '../users/users.schema';
 import { type AuthConfig, authConfig } from './auth.config';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
+import { Roles } from './decorators/roles.decorator';
 import { type LoginDto, loginSchema } from './dto/login.dto';
 import { sessionCookieName, sessionCookieOptions } from './sessions/session-cookie';
 
@@ -63,6 +64,7 @@ export class AuthController {
     this.adapterHost.httpAdapter.clearCookie(response, name, sessionCookieOptions(this.config));
   }
 
+  @Roles(['user', 'admin'])
   @Get('me')
   me(@CurrentUser() user: PublicUser): PublicUser {
     return user;

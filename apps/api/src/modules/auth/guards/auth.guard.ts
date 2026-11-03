@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 
 import { ApiError } from '../../../platform/http/api-error';
 import { readCookie } from '../../../platform/http/cookies';
-import { PUBLIC_ROUTE } from '../../../platform/http/public.decorator';
+import { isPublicRoute } from '../../../platform/http/public.decorator';
 import { type AuthConfig, authConfig } from '../auth.config';
 import { AuthService } from '../auth.service';
 import { type AuthenticatedRequest } from '../decorators/current-user.decorator';
@@ -23,13 +23,7 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // The handler's mark first, then its controller's.
-    const isPublic = this.reflector.getAllAndOverride<boolean | undefined>(PUBLIC_ROUTE, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-
-    if (isPublic === true) {
+    if (isPublicRoute(this.reflector, context)) {
       return true;
     }
 

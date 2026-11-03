@@ -1,7 +1,8 @@
-import { type CustomDecorator, SetMetadata } from '@nestjs/common';
+import { type CustomDecorator, type ExecutionContext, SetMetadata } from '@nestjs/common';
+import { type Reflector } from '@nestjs/core';
 
-/** Metadata key under which `@Public()` marks a route; the authentication guard reads it. */
-export const PUBLIC_ROUTE = 'isPublic';
+/** Metadata key under which `@Public()` marks a route. */
+const PUBLIC_ROUTE = 'isPublic';
 
 /**
  * Lets a route, or every route of a controller, answer without a logged-in user. Every other
@@ -10,4 +11,14 @@ export const PUBLIC_ROUTE = 'isPublic';
  */
 export function Public(): CustomDecorator {
   return SetMetadata(PUBLIC_ROUTE, true);
+}
+
+/** Whether the route being handled, or its controller, is marked `@Public()`. For guards. */
+export function isPublicRoute(reflector: Reflector, context: ExecutionContext): boolean {
+  return (
+    reflector.getAllAndOverride<boolean | undefined>(PUBLIC_ROUTE, [
+      context.getHandler(),
+      context.getClass(),
+    ]) === true
+  );
 }

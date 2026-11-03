@@ -5,10 +5,11 @@ import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AuthGuard } from './guards/auth.guard';
+import { RolesGuard } from './guards/roles.guard';
 import { PasswordHasher } from './password-hasher';
 import { SessionsRepository } from './sessions/sessions.repository';
 
-/** Login, logout and sessions. Its guard protects every route of the API. */
+/** Login, logout, sessions and roles. Its guards protect every route of the API. */
 @Module({
   imports: [UsersModule],
   controllers: [AuthController],
@@ -16,8 +17,10 @@ import { SessionsRepository } from './sessions/sessions.repository';
     AuthService,
     SessionsRepository,
     PasswordHasher,
-    // A global guard: it runs before every route in every module, not only this module's.
+    // Global guards: they run before every route in every module, not only this module's, in
+    // this order. Who the user is comes first (401), then whether their role may (403).
     { provide: APP_GUARD, useClass: AuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
 export class AuthModule {}

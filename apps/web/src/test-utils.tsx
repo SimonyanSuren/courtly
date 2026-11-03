@@ -10,6 +10,8 @@ import { createQueryClient } from './query-client';
 
 export const ana = { id: 'u1', email: 'ana@example.com', name: 'Ana Silva', role: 'user' };
 
+export const admin = { id: 'u2', email: 'admin@example.com', name: 'Rui Admin', role: 'admin' };
+
 export function problem(
   status: number,
   code: string,

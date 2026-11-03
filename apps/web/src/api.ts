@@ -7,6 +7,8 @@ export class ApiError extends Error {
     /** The HTTP status, or 0 when no response arrived. */
     readonly status: number,
     message: string,
+    /** The API's stable name for the error, such as "COURT_NAME_TAKEN", when it sent one. */
+    readonly code?: string,
     /** The first message for each invalid body field, by field name. */
     readonly fieldErrors: Readonly<Partial<Record<string, string>>> = {},
   ) {
@@ -49,9 +51,13 @@ async function toApiError(response: Response): Promise<ApiError> {
   const problem: unknown = isProblem ? await response.json() : undefined;
 
   // A 5xx detail describes our failure, which the user cannot act on.
-  return response.status < 500 && isRecord(problem) && typeof problem.detail === 'string'
-    ? new ApiError(response.status, problem.detail, bodyFieldErrors(problem.errors))
-    : new ApiError(response.status, SERVER_ERROR);
+  if (response.status >= 500 || !isRecord(problem) || typeof problem.detail !== 'string') {
+    return new ApiError(response.status, SERVER_ERROR);
+  }
+
+  const code = typeof problem.code === 'string' ? problem.code : undefined;
+
+  return new ApiError(response.status, problem.detail, code, bodyFieldErrors(problem.errors));
 }
 
 /**
@@ -60,7 +66,7 @@ async function toApiError(response: Response): Promise<ApiError> {
  */
 export async function apiRequest(
   path: string,
-  { method = 'GET', body }: { method?: 'GET' | 'POST'; body?: unknown } = {},
+  { method = 'GET', body }: { method?: 'GET' | 'POST' | 'PATCH'; body?: unknown } = {},
 ): Promise<unknown> {
   let response: Response;
 

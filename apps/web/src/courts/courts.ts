@@ -2,7 +2,10 @@ import { keepPreviousData, useQuery, type UseQueryResult } from '@tanstack/react
 
 import { apiRequest } from '../api';
 
-export type Sport = 'padel' | 'tennis' | 'squash' | 'badminton' | 'pickleball';
+/** Every sport a court can be for; the type follows from this list. */
+export const sports = ['padel', 'tennis', 'squash', 'badminton', 'pickleball'] as const;
+
+export type Sport = (typeof sports)[number];
 
 export interface Court {
   id: string;
@@ -34,10 +37,13 @@ interface Availability {
 /** The start of every availability query's key, so a booking can refresh them all. */
 export const availabilityKey = ['availability'];
 
-/** The courts a user can book, by name. */
+/** The key of the courts list, so a change to a court can refresh it. */
+export const courtsKey = ['courts'];
+
+/** The courts by name: the active ones for a user, which they can book, and all for an admin. */
 export function useCourts(): UseQueryResult<Court[]> {
   return useQuery({
-    queryKey: ['courts'],
+    queryKey: courtsKey,
     queryFn: async () => (await apiRequest('/courts')) as Court[],
   });
 }

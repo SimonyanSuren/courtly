@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router';
 
-import { AdminPage } from './admin/admin-page';
+import { CourtManagementPage } from './admin/court-management-page';
+import { DayViewPage } from './admin/day-view-page';
 import { LoginPage } from './auth/login-page';
 import { SignedInLayout } from './auth/signed-in-layout';
 import { BookingsPage } from './bookings/bookings-page';
@@ -17,7 +18,10 @@ export function App(): React.JSX.Element {
         <Route path="/bookings" element={<BookingsPage />} />
       </Route>
       <Route element={<SignedInLayout role="admin" />}>
-        <Route path="/admin" element={<AdminPage />} />
+        {/* Where admins land after logging in. */}
+        <Route path="/admin" element={<Navigate to="/admin/courts" replace />} />
+        <Route path="/admin/courts" element={<CourtManagementPage />} />
+        <Route path="/admin/bookings" element={<DayViewPage />} />
       </Route>
       {/* Any other path, including /: the login page sends a logged-in user on to their start page. */}
       <Route path="*" element={<Navigate to="/login" replace />} />

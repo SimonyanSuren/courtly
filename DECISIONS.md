@@ -361,3 +361,27 @@ the tests cover them.
     request, and an attacker can lock out anyone.
   - Shared storage such as Redis for the counters: one more service for one API instance. The
     throttler accepts one when the API runs as several.
+
+## 18. Admin screens: prices typed in euros, errors at their fields
+
+- **Chosen:**
+  - Admins type a price in euros, with up to 2 decimals after a dot or a comma. The digits
+    become integer cents without floating-point arithmetic. Anything else is refused at the
+    field before sending; whether the amount is allowed is the server's decision.
+  - Each message from the server shows once: a 400's `errors[]` at the field with that path, a
+    409 `COURT_NAME_TAKEN` at the name, anything else in an alert above the form.
+  - After any change to a court, accepted or refused, the courts list is fetched again.
+  - Courts are created and edited in a dialog over the list; deactivating and reactivating take
+    one click, without a confirmation.
+  - The day view keeps its date in the address and shows the API's `expectedRevenueCents`.
+- **Why:** as floating-point numbers, 19.99 × 100 is 1998.9999999999998. A comma is what a
+  Portuguese keyboard types, and with at most 2 decimals it cannot be read as a thousands
+  separator. A price changed silently is worse than a question. Deactivating is undone with one
+  more click and keeps every booking. Summing revenue in the browser would put the rule in two
+  places.
+- **Rejected:**
+  - `parseFloat` and multiplying by 100, then rounding: correct only with care, where reading
+    the digits is exact by construction.
+  - Mantine's `NumberInput`: its value is a floating-point number.
+  - Rounding a third decimal.
+  - Separate pages for creating and editing: more routes, while the list already holds the court.

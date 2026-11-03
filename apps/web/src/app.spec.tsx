@@ -1,10 +1,8 @@
 import { screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { alertText, ana, logIn, problem, renderApp, stubApi } from './test-utils';
-
-const admin = { id: 'u2', email: 'admin@example.com', name: 'Rui Admin', role: 'admin' };
+import { admin, alertText, ana, logIn, problem, renderApp, stubApi } from './test-utils';
 
 const loggedOut = problem(401, 'UNAUTHORIZED', 'Log in to continue.');
 
@@ -28,13 +26,18 @@ describe('logging in', () => {
     });
   });
 
-  it('takes an admin to the Admin page', async () => {
-    stubApi({ 'GET /api/auth/me': loggedOut, 'POST /api/auth/login': Response.json(admin) });
+  it('takes an admin to court management', async () => {
+    stubApi({
+      'GET /api/auth/me': loggedOut,
+      'POST /api/auth/login': Response.json(admin),
+      'GET /api/courts': Response.json([]),
+    });
     renderApp('/login');
 
     await logIn('admin@example.com', 'correct horse');
 
-    expect(await screen.findByRole('heading', { name: 'Admin' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Courts' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Add court' })).toBeTruthy();
   });
 
   it("shows the server's explanation when the credentials are wrong", async () => {
@@ -112,20 +115,27 @@ describe('the session', () => {
     expect(await screen.findByRole('button', { name: 'Log in' })).toBeTruthy();
   });
 
-  it('keeps a user out of admin pages', async () => {
-    stubApi({ 'GET /api/auth/me': Response.json(ana), 'GET /api/courts': Response.json([]) });
-    renderApp('/admin');
+  it.each(['/admin', '/admin/courts', '/admin/bookings'])(
+    'keeps a user out of %s and sends them to their Courts page',
+    async (path) => {
+      const fetchMock = stubApi({
+        'GET /api/auth/me': Response.json(ana),
+        'GET /api/courts': Response.json([]),
+      });
+      renderApp(path);
 
-    expect(await screen.findByRole('heading', { name: 'Courts' })).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: 'Admin' })).toBeNull();
-  });
+      expect(await screen.findByText('There are no courts to book right now.')).toBeTruthy();
+      expect(screen.queryByRole('button', { name: 'Add court' })).toBeNull();
+      expect(fetchMock.mock.calls.some(([url]) => url.startsWith('/api/admin'))).toBe(false);
+    },
+  );
 
   it('keeps an admin out of user pages', async () => {
-    stubApi({ 'GET /api/auth/me': Response.json(admin) });
-    renderApp('/courts');
+    stubApi({ 'GET /api/auth/me': Response.json(admin), 'GET /api/courts': Response.json([]) });
+    renderApp('/bookings');
 
-    expect(await screen.findByRole('heading', { name: 'Admin' })).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: 'Courts' })).toBeNull();
+    expect(await screen.findByRole('button', { name: 'Add court' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'My bookings' })).toBeNull();
   });
 
   it('ends when the API stops accepting it, and the login page shows', async () => {
@@ -174,5 +184,32 @@ describe('the header', () => {
     await user.click(screen.getByRole('link', { name: 'Courts' }));
 
     expect(await screen.findByRole('heading', { name: 'Courts' })).toBeTruthy();
+  });
+
+  it("links the admin's pages and marks the current one", async () => {
+    const user = userEvent.setup();
+    // The day view opens on today.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-05T12:00:00Z'));
+    stubApi({
+      'GET /api/auth/me': Response.json(admin),
+      'GET /api/courts': Response.json([]),
+      'GET /api/admin/bookings?date=2026-11-05': Response.json({
+        date: '2026-11-05',
+        bookings: [],
+        expectedRevenueCents: 0,
+      }),
+    });
+    renderApp('/admin/courts');
+
+    const courtsLink = await screen.findByRole('link', { name: 'Courts' });
+    expect(courtsLink.getAttribute('aria-current')).toBe('page');
+
+    await user.click(screen.getByRole('link', { name: 'Day view' }));
+
+    expect(await screen.findByRole('heading', { name: 'Day view' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Day view' }).getAttribute('aria-current')).toBe(
+      'page',
+    );
   });
 });

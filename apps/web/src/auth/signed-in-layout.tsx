@@ -10,7 +10,10 @@ const navigation: Record<Role, Array<{ path: string; label: string }>> = {
     { path: '/courts', label: 'Courts' },
     { path: '/bookings', label: 'My bookings' },
   ],
-  admin: [{ path: '/admin', label: 'Admin' }],
+  admin: [
+    { path: '/admin/courts', label: 'Courts' },
+    { path: '/admin/bookings', label: 'Day view' },
+  ],
 };
 
 /**

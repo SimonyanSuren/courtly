@@ -2,9 +2,9 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from '@jest/glo
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 
-import { resetDatabase } from '../../../../test/database';
-import { type Database } from '../../../platform/database/database';
-import { users } from './user.entity';
+import { resetDatabase } from '../../../test/database';
+import { type Database } from '../../platform/database/database';
+import { users } from './users.schema';
 
 // Runs against this worker's migrated test database, so it checks the constraints the migration
 // created, not just the TypeScript declaration.

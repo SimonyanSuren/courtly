@@ -12,7 +12,7 @@ Run from the repository root; each one covers every workspace.
   127.0.0.1:3000); `docker compose down -v` also deletes the data
 - `docker compose up -d --wait postgres`, then `npm run start:dev -w apps/api`: the API with
   reload (copy `apps/api/.env.example` to `apps/api/.env` first)
-- Database schema: tables are declared in `apps/api/src/modules/*/entities/*.entity.ts`. After a
+- Database schema: tables are declared in `apps/api/src/modules/**/*.schema.ts`. After a
   change, `npm run db:generate -w apps/api -- --name <change>` writes the SQL migration to
   `apps/api/migrations/` (review and commit it); `npm run build -w apps/api`, then
   `npm run db:migrate -w apps/api` applies pending migrations.

@@ -6,7 +6,7 @@ assignee:
   - '@SimonyanSuren'
   - '@claude'
 created_date: '2026-11-01T23:42:00Z'
-updated_date: '2026-11-02T19:07:00Z'
+updated_date: '2026-11-02T23:57:00Z'
 labels:
   - api
 dependencies:
@@ -38,7 +38,7 @@ There are two roles, User and Admin, and the API itself must enforce what each m
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-1. Migrations: drizzle-kit generates SQL from the module entities into apps/api/migrations; npm run db:migrate applies them from compiled code with Drizzle's migrator. First table: users (uuidv7 id, unique lower-case email, name, role, password hash, created_at).
+1. Migrations: drizzle-kit generates SQL from the modules' schema files into apps/api/migrations; npm run db:migrate applies them from compiled code with Drizzle's migrator. First table: users (uuidv7 id, unique lower-case email, name, role, password hash, created_at).
 
 2. Tests: global setup migrates a template database and clones one database per Jest worker; a helper empties the tables before each test.
 

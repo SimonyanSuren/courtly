@@ -123,10 +123,12 @@ the tests cover them.
   `app.module.ts` is the only file that imports every module. Lint rejects any import from
   `platform/` into `modules/`.
 - **Inside a module:** the Nest CLI layout. The module, controller, service and repository files
-  sit at the top; `entities/` holds the Drizzle tables, `dto/` the request schemas, and `guards/`
-  or `decorators/` appear where a module has them. Business rules that need neither the database
-  nor HTTP, such as opening hours or the cancellation window, are pure functions in a `domain/`
-  folder, tested without Nest; services call them and turn a broken rule into an `ApiError`.
+  sit at the top, next to `<name>.schema.ts`, the module's Drizzle tables; `dto/` holds the Zod
+  schemas that validate requests, and `guards/` or `decorators/` appear where a module has them. A
+  part of a module with several files of its own gets a folder, such as `auth/sessions/` (table,
+  repository, cookie and token). Business rules that need neither the database nor HTTP, such as
+  opening hours or the cancellation window, are pure functions in a `domain/` folder, tested
+  without Nest; services call them and turn a broken rule into an `ApiError`.
 - **Why:** Nest recommends one feature module per area. Keeping them apart from the technical code
   shows what the product does at a glance, and technical code can then never come to depend on
   business code.
@@ -138,6 +140,10 @@ the tests cover them.
   - Splitting technical code into `platform/` (infrastructure) and `app/` (framework parts): every
     piece here is both, and `app/` would be ambiguous next to `app.module.ts`.
   - Folders by technical type (`controllers/`, `services/`): one feature would touch every folder.
+  - `entities/*.entity.ts`, the Nest CLI's name for table files: it comes from TypeORM's entity
+    classes, and in domain-driven design an entity is a domain object with behaviour, which here
+    lives in `domain/`. Drizzle calls these declarations the schema, as does drizzle-kit's
+    `schema` setting.
   - Layers in every module (`application/`, `domain/`, `infrastructure/`), as in Clean
     Architecture: each module here has a handful of rules and one database, so the layers would
     add indirection with nothing to swap behind them. The `domain/` folder keeps their main

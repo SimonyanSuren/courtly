@@ -400,8 +400,10 @@ the tests cover them.
   with CHECK constraints keeping stored names trimmed and 1 to 100 characters. Prices are
   integer cents from 1 to 100,000 (€1,000.00 an hour). The database checks every limit the
   request validation checks. A duplicate name is the unique index's violation, answered with
-  409 `COURT_NAME_TAKEN`. An id that is not a UUID answers 404, as an unknown one does. Money is
-  integer cents everywhere: in the columns, in JSON and in the code.
+  409 `COURT_NAME_TAKEN`. Opening hours that another change made invalid in the meantime are the
+  CHECK's violation, answered with the validation's 400. An id that is not a UUID answers 404,
+  as an unknown one does. Money is integer cents everywhere: in the columns, in JSON and in the
+  code.
 - **Why:** users pick courts by name and cannot tell "Padel 1" from "padel 1". Only the index sees
   a name another request is inserting at the same moment, so two creates cannot both take it.
   €1,000 an hour is far above any court's price, so a price typed with extra zeros is refused,

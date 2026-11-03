@@ -7,6 +7,9 @@ const UNIQUE_VIOLATION = '23505';
 /** PostgreSQL's SQLSTATE for an exclusion violation. */
 const EXCLUSION_VIOLATION = '23P01';
 
+/** PostgreSQL's SQLSTATE for a check violation. */
+const CHECK_VIOLATION = '23514';
+
 /**
  * Drizzle wraps every failed query in a DrizzleQueryError; the driver's error, its cause, carries
  * PostgreSQL's code and the constraint's name.
@@ -31,4 +34,9 @@ export function isUniqueViolation(error: unknown, constraint: string): boolean {
  */
 export function isExclusionViolation(error: unknown, constraint: string): boolean {
   return isViolation(error, EXCLUSION_VIOLATION, constraint);
+}
+
+/** Whether a query failed because the row it wrote broke this CHECK constraint. */
+export function isCheckViolation(error: unknown, constraint: string): boolean {
+  return isViolation(error, CHECK_VIOLATION, constraint);
 }

@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
-import { isUniqueViolation } from '../../platform/database/errors';
+import { isCheckViolation, isUniqueViolation } from '../../platform/database/errors';
 import { Role } from '../users/domain/role';
 import { CourtError } from './courts.errors';
 import { CourtsRepository } from './courts.repository';
-import { type Court, COURT_NAME_UNIQUE } from './courts.schema';
+import { type Court, COURT_NAME_UNIQUE, COURT_OPENING_HOURS_VALID } from './courts.schema';
 import { isValidOpeningHours, type OpeningHours } from './domain/opening-hours';
 import { type CourtChangesDto } from './dto/court-changes.dto';
 import { type NewCourtDto } from './dto/new-court.dto';
@@ -17,15 +17,22 @@ function assertValidOpeningHours(hours: OpeningHours): void {
 }
 
 /**
- * Waits for a write and answers COURT_NAME_TAKEN when another court has the name. The unique
- * index decides, not an earlier lookup, so two requests for one name cannot both succeed.
+ * Waits for a write and answers in the API's terms when the table refuses it: COURT_NAME_TAKEN
+ * when another court has the name, and the 400 of a court that would close before it opens. The
+ * constraints decide, not the earlier checks: two requests for one name cannot both succeed, and
+ * two changes of one court's hours, each valid against the hours it read, cannot combine into
+ * hours that are not.
  */
-async function rejectingTakenName<T>(write: Promise<T>): Promise<T> {
+async function refusingInvalidCourts<T>(write: Promise<T>): Promise<T> {
   try {
     return await write;
   } catch (error) {
     if (isUniqueViolation(error, COURT_NAME_UNIQUE)) {
       throw CourtError.nameTaken();
+    }
+
+    if (isCheckViolation(error, COURT_OPENING_HOURS_VALID)) {
+      throw CourtError.closesBeforeOpening();
     }
 
     throw error;
@@ -55,7 +62,7 @@ export class CourtsService {
   async create(court: NewCourtDto): Promise<Court> {
     assertValidOpeningHours(court);
 
-    return rejectingTakenName(this.courts.create(court));
+    return refusingInvalidCourts(this.courts.create(court));
   }
 
   async update(id: string, changes: CourtChangesDto): Promise<Court> {
@@ -67,7 +74,7 @@ export class CourtsService {
 
     // The hours as they will be: a new closing hour must still come after the stored opening
     // hour. Two changes at once could each pass against the hours they read; the table's CHECK
-    // constraint still refuses the second.
+    // constraint then refuses the second, with the same 400.
     assertValidOpeningHours({
       openingHour: changes.openingHour ?? court.openingHour,
       closingHour: changes.closingHour ?? court.closingHour,
@@ -78,7 +85,7 @@ export class CourtsService {
       return court;
     }
 
-    const updated = await rejectingTakenName(this.courts.update(id, changes));
+    const updated = await refusingInvalidCourts(this.courts.update(id, changes));
 
     if (!updated) {
       throw CourtError.notFound();

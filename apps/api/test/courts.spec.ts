@@ -1,9 +1,11 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
 import { type NestExpressApplication } from '@nestjs/platform-express';
+import { eq } from 'drizzle-orm';
 import request, { type Response } from 'supertest';
 
 import { type Court, courts } from '../src/modules/courts/courts.schema';
 import { DATABASE, type Database } from '../src/platform/database/database';
+import { whileUncommitted } from './concurrency';
 import { createTestApp } from './create-test-app';
 import { resetDatabase } from './database';
 import { createUser, logIn } from './users';
@@ -308,6 +310,31 @@ describe('courts over HTTP', () => {
       expect(openingAtClosing.status).toBe(400);
       expect(closingEarlier.status).toBe(200);
       expect(closingEarlier.body).toMatchObject({ openingHour: 8, closingHour: 9 });
+    });
+
+    it('answers 400 when another change of the hours commits first and the two do not fit', async () => {
+      // Open from 8 to 22. The other change opens it at 20; this one, checked against 8 to 22,
+      // closes it at 10. Together the court would close before it opens.
+      const id = await insertCourt();
+
+      const response = await whileUncommitted(
+        db,
+        {
+          statement: 'update "courts"',
+          write: async (other) =>
+            other.update(courts).set({ openingHour: 20 }).where(eq(courts.id, id)),
+          end: 'commit',
+        },
+        async () => patch(id, { closingHour: 10 }),
+      );
+      const stored = await get(`/${id}`, adminCookie);
+
+      expect(response.status).toBe(400);
+      expect(response.body).toMatchObject({
+        code: 'VALIDATION_FAILED',
+        errors: [{ in: 'body', path: 'closingHour' }],
+      });
+      expect(stored.body).toMatchObject({ openingHour: 20, closingHour: 22 });
     });
 
     it.each([

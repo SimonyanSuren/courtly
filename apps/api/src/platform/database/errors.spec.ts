@@ -2,7 +2,7 @@ import { describe, expect, it } from '@jest/globals';
 import { DrizzleQueryError } from 'drizzle-orm';
 import { DatabaseError } from 'pg';
 
-import { isExclusionViolation, isUniqueViolation } from './errors';
+import { isCheckViolation, isExclusionViolation, isUniqueViolation } from './errors';
 
 /** A failed query as Drizzle reports it: the driver's error with PostgreSQL's fields, wrapped. */
 function failedQuery(code: string, constraint: string): DrizzleQueryError {
@@ -42,5 +42,24 @@ describe('isExclusionViolation', () => {
     { error: new Error('connection refused'), problem: 'an error without a query' },
   ])('does not mistake $problem for it', ({ error }) => {
     expect(isExclusionViolation(error, 'bookings_no_overlap')).toBe(false);
+  });
+});
+
+describe('isCheckViolation', () => {
+  it('recognises a check violation of the named constraint', () => {
+    expect(
+      isCheckViolation(
+        failedQuery('23514', 'courts_opening_hours_valid'),
+        'courts_opening_hours_valid',
+      ),
+    ).toBe(true);
+  });
+
+  it.each([
+    { error: failedQuery('23514', 'courts_name_length'), problem: 'another constraint' },
+    { error: failedQuery('23505', 'courts_opening_hours_valid'), problem: 'a unique violation' },
+    { error: new Error('connection refused'), problem: 'an error without a query' },
+  ])('does not mistake $problem for it', ({ error }) => {
+    expect(isCheckViolation(error, 'courts_opening_hours_valid')).toBe(false);
   });
 });

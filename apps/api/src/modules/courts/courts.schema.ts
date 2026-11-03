@@ -18,6 +18,9 @@ export const sport = pgEnum('sport', Sport);
 /** Its unique violation answers COURT_NAME_TAKEN. */
 export const COURT_NAME_UNIQUE = 'courts_name_unique';
 
+/** Its check violation answers as the request validation does when a court closes too early. */
+export const COURT_OPENING_HOURS_VALID = 'courts_opening_hours_valid';
+
 // drizzle-kit copies a CHECK's SQL into the migration as it is: a ${value} would become a $1
 // parameter, which DDL cannot have. sql.raw writes the number itself.
 const literal = (value: number): SQL => sql.raw(String(value));
@@ -51,7 +54,7 @@ export const courts = pgTable(
       sql`${table.hourlyPriceCents} between 1 and ${literal(MAX_HOURLY_PRICE_CENTS)}`,
     ),
     check(
-      'courts_opening_hours_valid',
+      COURT_OPENING_HOURS_VALID,
       sql`0 <= ${table.openingHour} and ${table.openingHour} < ${table.closingHour} and ${table.closingHour} <= 24`,
     ),
     // Names are stored trimmed, and this ignores case, so "Padel 1" and "padel 1" cannot both

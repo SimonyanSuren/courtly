@@ -6,7 +6,7 @@ assignee:
   - '@SimonyanSuren'
   - '@claude'
 created_date: '2026-11-01T23:42:00Z'
-updated_date: '2026-11-03T22:44:00Z'
+updated_date: '2026-11-03T22:55:00Z'
 labels:
   - api
 dependencies:
@@ -42,5 +42,5 @@ Criterion 3 shown with bookings: test/bookings.spec.ts ('keeps the bookings of a
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
-Courts with a name unique ignoring case, a sport, an hourly price in integer cents, whole opening hours and an active flag. Admins create, edit, deactivate and reactivate them; users see active courts only, and an inactive court answers 404 to them. The database checks every limit the request validation checks. Verified by test/courts.spec.ts and courts.schema.spec.ts over a real PostgreSQL, plus the bookings tests for deactivation. Follow-up: two simultaneous edits of one court's hours answer 500 instead of 400 (fix planned).
+Courts with a name unique ignoring case, a sport, an hourly price in integer cents, whole opening hours and an active flag. Admins create, edit, deactivate and reactivate them; users see active courts only, and an inactive court answers 404 to them. The database checks every limit the request validation checks, and its violations get the same answers, also when two changes race. Verified by test/courts.spec.ts and courts.schema.spec.ts over a real PostgreSQL, plus the bookings tests for deactivation.
 <!-- SECTION:FINAL_SUMMARY:END -->

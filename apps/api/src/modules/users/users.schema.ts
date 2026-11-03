@@ -24,3 +24,8 @@ export const users = pgTable(
     check('users_email_lower_case', sql`${table.email} = lower(${table.email})`),
   ],
 );
+
+export type User = typeof users.$inferSelect;
+
+/** What the API shows of a user: never the password hash. */
+export type PublicUser = Pick<User, 'id' | 'email' | 'name' | 'role'>;

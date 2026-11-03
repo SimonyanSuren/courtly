@@ -2,8 +2,10 @@ import { Controller, Get, Inject, ServiceUnavailableException } from '@nestjs/co
 import { sql } from 'drizzle-orm';
 
 import { DATABASE, type Database } from '../database/database';
+import { Public } from '../http/public.decorator';
 
 /** Liveness for Docker and monitoring: the API answers and can reach its database. */
+@Public()
 @Controller('health')
 export class HealthController {
   constructor(@Inject(DATABASE) private readonly db: Database) {}

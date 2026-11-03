@@ -25,6 +25,8 @@ x-api: &api
   environment:
     PORT: 3000
     DATABASE_URL: postgres://courtly:courtly@postgres:5432/courtly
+    # The demo is served over plain HTTP on localhost, where a Secure cookie would not be kept.
+    SESSION_COOKIE_SECURE: 'false'
   # Hardening a production runtime should also apply. The API writes nothing to disk, so the
   # filesystem is read-only; /tmp stays writable, in memory, for libraries that need scratch files.
   read_only: true

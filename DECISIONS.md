@@ -155,7 +155,9 @@ the tests cover them.
   an httpOnly cookie; the database keeps only the token's SHA-256 hash, with its user and expiry.
   A global guard rejects every request without a valid session unless the route is marked
   public. Passwords are hashed with argon2id from `node:crypto`, at OWASP's recommended cost
-  (19 MiB of memory, 2 passes, 1 lane).
+  (19 MiB of memory, 2 passes, 1 lane). The cookie is `SameSite=Lax`, and Nest's
+  `enableCsrfProtection()` rejects state-changing requests from other origins, judged by the
+  browser's `Sec-Fetch-Site` header.
 - **Why:** with sessions, logging out ends access at once and a role change applies on the next
   request; there is no signing key to protect or rotate. The price is one indexed query per
   request. argon2id is OWASP's first choice for passwords, and Node has it built in (stable since
@@ -172,6 +174,8 @@ the tests cover them.
   - bcrypt: it uses only the first 72 bytes of a password, and like the `argon2` npm package it
     is a native module that needs install scripts, which `.npmrc` disables.
   - scrypt: OWASP's alternative for when argon2id is not available.
+  - CSRF tokens: every current browser sends `Sec-Fetch-Site`, which tells a same-origin request
+    from a cross-site one, so a token would add state and a round trip without more protection.
 
 ## 10. Docker: one image per app, migrations as a one-off service
 

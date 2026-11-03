@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 
+import { authConfig } from './modules/auth/auth.config';
+import { AuthModule } from './modules/auth/auth.module';
 import { databaseConfig } from './platform/database/database.config';
 import { DatabaseModule } from './platform/database/database.module';
 import { HealthModule } from './platform/health/health.module';
@@ -13,9 +15,10 @@ import { SchemaValidationPipe } from './platform/http/schema-validation.pipe';
   imports: [
     // Builds every configuration namespace at startup; an invalid variable stops the start.
     // Global, so any module can inject a namespace without importing ConfigModule again.
-    ConfigModule.forRoot({ isGlobal: true, load: [httpConfig, databaseConfig] }),
+    ConfigModule.forRoot({ isGlobal: true, load: [httpConfig, databaseConfig, authConfig] }),
     DatabaseModule,
     HealthModule,
+    AuthModule,
   ],
   // Registered as providers, not with useGlobalFilters() or useGlobalPipes(), so they also apply
   // in tests and can inject dependencies.

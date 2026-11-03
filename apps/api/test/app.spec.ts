@@ -4,6 +4,7 @@ import { type NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { z } from 'zod';
 
+import { Public } from '../src/platform/http/public.decorator';
 import { createTestApp } from './create-test-app';
 
 const courtSchema = z.object({
@@ -13,7 +14,9 @@ const courtSchema = z.object({
 const searchSchema = z.object({ sport: z.enum(['padel', 'tennis']) });
 const idSchema = z.coerce.number().int().positive();
 
-// No real endpoint exists yet, so this test-only controller exercises validation and errors.
+// A test-only controller that exercises validation and errors. Public: these tests are not
+// about login.
+@Public()
 @Controller('probe')
 class ProbeController {
   @Post(':id')

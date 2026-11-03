@@ -1,10 +1,12 @@
 ---
 id: TASK-5
 title: Court management
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@SimonyanSuren'
+  - '@claude'
 created_date: '2026-11-01T23:42:00Z'
-updated_date: '2026-11-02T21:42:00Z'
+updated_date: '2026-11-03T14:14:00Z'
 labels:
   - api
 dependencies:
@@ -32,5 +34,5 @@ Admins maintain the facility's courts. Courts are never deleted: bookings refere
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Opening-hours validation exists: isValidOpeningHours in modules/courts/domain/opening-hours.ts. Use it for the 400 and add a matching CHECK constraint.
+The courts API is in place and tested over HTTP. Criterion 3 (deactivating keeps a court's bookings) can be shown once bookings reference courts, in TASK-6.
 <!-- SECTION:NOTES:END -->

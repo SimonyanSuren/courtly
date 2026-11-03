@@ -1,9 +1,9 @@
 import { type CanActivate, type ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
-import { ApiError } from '../../../platform/http/api-error';
 import { isPublicRoute } from '../../../platform/http/public.decorator';
-import { type Role } from '../../users/users.schema';
+import { type Role } from '../../users/domain/role';
+import { AuthError } from '../auth.errors';
 import { type AuthenticatedRequest } from '../decorators/current-user.decorator';
 import { Roles } from '../decorators/roles.decorator';
 
@@ -38,7 +38,7 @@ export class RolesGuard implements CanActivate {
     const { user } = context.switchToHttp().getRequest<AuthenticatedRequest>();
 
     if (!user || !roles.includes(user.role)) {
-      throw new ApiError(403, 'FORBIDDEN', 'Your account does not have access to this.');
+      throw AuthError.forbidden();
     }
 
     return true;

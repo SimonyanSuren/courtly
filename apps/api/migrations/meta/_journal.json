@@ -15,6 +15,13 @@
       "when": 1793656434181,
       "tag": "0001_create_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793670430923,
+      "tag": "0002_create_courts",
+      "breakpoints": true
     }
   ]
 }

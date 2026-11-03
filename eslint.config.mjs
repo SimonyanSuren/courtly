@@ -216,8 +216,9 @@ export default defineConfig(
       '@typescript-eslint/dot-notation': 'error',
       'no-throw-literal': 'off',
       '@typescript-eslint/only-throw-error': 'error',
+      // TypeScript reports a real redeclaration itself (TS2451). A value and a type may share a
+      // name, as the enum-like Role does: the object and the union of its values.
       'no-redeclare': 'off',
-      '@typescript-eslint/no-redeclare': 'error',
       'no-return-await': 'off',
       'no-shadow': 'off',
       'no-invalid-this': 'off',

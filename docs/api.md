@@ -63,9 +63,9 @@ interface User {
 
 interface Court {
   id: string;
-  name: string;
+  name: string; // trimmed, 1 to 100 characters, unique ignoring case
   sport: Sport;
-  hourlyPriceCents: number; // more than 0
+  hourlyPriceCents: number; // 1 to 100000 (€1,000.00)
   openingHour: number; // 0 to 23
   closingHour: number; // 1 to 24, after openingHour; 24 is the midnight that ends the day
   active: boolean;
@@ -118,6 +118,13 @@ interface AdminBooking extends Booking {
 
 Courts are never deleted. `{ "active": false }` deactivates a court and keeps its bookings;
 `{ "active": true }` reactivates it. New opening hours apply to new bookings only.
+
+- Names compare ignoring case and the spaces around them: "Padel 1" and " padel 1" are taken by
+  the same court.
+- An id that is not a UUID answers 404 `COURT_NOT_FOUND`, as an unknown one does.
+- `PATCH` checks the opening hours as they will be after the change. A court that would not open
+  before it closes answers 400 with the error at `closingHour`.
+- An empty `PATCH` answers the court unchanged.
 
 ### Availability
 

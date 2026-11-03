@@ -1,9 +1,9 @@
 import { Reflector } from '@nestjs/core';
 
-import { type Role } from '../../users/users.schema';
+import { type Role } from '../../users/domain/role';
 
 /**
- * The roles that may use a route, or every route of a controller: `@Roles(['admin'])`. A route's
+ * The roles that may use a route, or every route of a controller: `@Roles([Role.ADMIN])`. A route's
  * own list replaces its controller's. Every route that is not `@Public()` needs one; the roles
  * guard refuses a route without it.
  */

@@ -385,3 +385,51 @@ the tests cover them.
   - Mantine's `NumberInput`: its value is a floating-point number.
   - Rounding a third decimal.
   - Separate pages for creating and editing: more routes, while the list already holds the court.
+
+## 19. Courts: names unique ignoring case, money in integer cents, limits in the database too
+
+- **Chosen:** court names are trimmed and unique ignoring case: a unique index on `lower(name)`,
+  with CHECK constraints keeping stored names trimmed and 1 to 100 characters. Prices are
+  integer cents from 1 to 100,000 (€1,000.00 an hour). The database checks every limit the
+  request validation checks. A duplicate name is the unique index's violation, answered with
+  409 `COURT_NAME_TAKEN`. An id that is not a UUID answers 404, as an unknown one does. Money is
+  integer cents everywhere: in the columns, in JSON and in the code.
+- **Why:** users pick courts by name and cannot tell "Padel 1" from "padel 1". Only the index sees
+  a name another request is inserting at the same moment, so two creates cannot both take it.
+  €1,000 an hour is far above any court's price, so a price typed with extra zeros is refused,
+  and a 2-hour booking stays far below the integer column's limit. A path segment that is not a
+  UUID names no court; clients treat ids as opaque. Money moves in whole cents: charges, refunds
+  and the amounts payment providers take (Stripe and Adyen use integer minor units), so integers
+  are exact and need no conversion. Payments would add a currency next to each amount, a money
+  type, one explicit rounding rule where fractions appear (VAT, discounts, splitting a price) and
+  `bigint` for totals.
+- **Rejected:**
+  - A lookup before the insert: two requests can both find the name free.
+  - `citext` or a case-insensitive collation: an extension or a declared collation for what
+    `lower()` does, as for emails.
+  - 400 for a malformed id: clients would come to depend on the id's format.
+  - decimal.js or PostgreSQL `numeric` for amounts: the driver returns `numeric` as a string, and
+    every boundary would convert, for an exactness integers already have. Decimals suit rates and
+    unit prices below a cent, not amounts.
+
+## 20. Fixed value sets as enum-like objects; each module's errors in one file
+
+- **Chosen:** a fixed set of values is a const object with UPPER_CASE members and a type of the
+  same name, in the module's `domain/`: `Role.ADMIN`, `Sport.PADEL`. The database enum
+  (`pgEnum`), the request validation (`z.enum`) and the code read the same object. Each module's
+  errors are functions in `<module>.errors.ts`, such as `CourtError.notFound()`, each with its
+  status, code and sentence.
+- **Why:** one list feeds the database, the validation and the code, so they cannot drift apart;
+  a name says what a comparison means, and the editor finds every use. Members are UPPER_CASE,
+  as the lint configuration asks of TypeScript enum members and as in Nest's
+  `HttpStatus.NOT_FOUND`. Error functions keep a code with its wording, and each throw gets its
+  own stack trace. `@typescript-eslint/no-redeclare` is off: TypeScript reports a real
+  redeclaration itself, and the rule refused a value and a type sharing a name.
+- **Rejected:**
+  - TypeScript `enum`: extra generated JavaScript, and not erasable syntax, which Node's type
+    stripping refuses.
+  - String literals alone (`'admin'`): type-checked, but a search for every admin check also
+    finds `/admin` and `admin@example.com`.
+  - One global file of error codes: the codes are each module's vocabulary, and every module
+    would edit the same file.
+  - Shared error instances: one object would carry the stack trace of wherever it was created.

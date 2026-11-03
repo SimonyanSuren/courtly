@@ -12,6 +12,7 @@ import {
 import { HttpAdapterHost } from '@nestjs/core';
 
 import { Public } from '../../platform/http/public.decorator';
+import { Role } from '../users/domain/role';
 import { type PublicUser } from '../users/users.schema';
 import { type AuthConfig, authConfig } from './auth.config';
 import { AuthService } from './auth.service';
@@ -77,7 +78,7 @@ export class AuthController {
     this.adapterHost.httpAdapter.clearCookie(response, name, sessionCookieOptions(this.config));
   }
 
-  @Roles(['user', 'admin'])
+  @Roles([Role.USER, Role.ADMIN])
   @Get('me')
   me(@CurrentUser() user: PublicUser): PublicUser {
     return user;

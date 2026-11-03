@@ -1,7 +1,9 @@
 import { sql } from 'drizzle-orm';
 import { check, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
-export const userRole = pgEnum('user_role', ['user', 'admin']);
+import { Role } from './domain/role';
+
+export const userRole = pgEnum('user_role', Role);
 
 /** People who can log in. Accounts are seeded: there is no sign-up. */
 export const users = pgTable(
@@ -26,8 +28,6 @@ export const users = pgTable(
 );
 
 export type User = typeof users.$inferSelect;
-
-export type Role = User['role'];
 
 /** What the API shows of a user: never the password hash. */
 export type PublicUser = Pick<User, 'id' | 'email' | 'name' | 'role'>;

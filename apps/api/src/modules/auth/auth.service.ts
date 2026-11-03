@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import { ApiError } from '../../platform/http/api-error';
 import { UsersRepository } from '../users/users.repository';
 import { type PublicUser } from '../users/users.schema';
 import { type AuthConfig, authConfig } from './auth.config';
+import { AuthError } from './auth.errors';
 import { PasswordHasher } from './password-hasher';
 import { createSessionToken, hashSessionToken } from './sessions/session-token';
 import { SessionsRepository } from './sessions/sessions.repository';
@@ -34,7 +34,7 @@ export class AuthService {
     const isPasswordCorrect = await this.passwords.verify(password, user?.passwordHash);
 
     if (!user || !isPasswordCorrect) {
-      throw new ApiError(401, 'INVALID_CREDENTIALS', 'The email or password is not correct.');
+      throw AuthError.invalidCredentials();
     }
 
     if (previousToken !== undefined) {

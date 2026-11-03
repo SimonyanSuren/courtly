@@ -5,8 +5,8 @@ import {
   type ThrottlerModuleOptions,
 } from '@nestjs/throttler';
 
-import { ApiError } from '../../../platform/http/api-error';
 import { type AuthConfig } from '../auth.config';
+import { AuthError } from '../auth.errors';
 import { loginSchema } from '../dto/login.dto';
 
 const WINDOW_MILLISECONDS = 15 * 60 * 1000;
@@ -60,12 +60,6 @@ export class LoginThrottleGuard extends ThrottlerGuard {
     this.setResponseHeader(this.getRequestResponse(context).res, 'Retry-After', timeToBlockExpire);
     const minutes = Math.ceil(timeToBlockExpire / SECONDS_PER_MINUTE);
 
-    return Promise.reject(
-      new ApiError(
-        429,
-        'TOO_MANY_LOGIN_ATTEMPTS',
-        `Too many login attempts. Try again in ${String(minutes)} ${minutes === 1 ? 'minute' : 'minutes'}.`,
-      ),
-    );
+    return Promise.reject(AuthError.tooManyLoginAttempts(minutes));
   }
 }

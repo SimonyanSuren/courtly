@@ -30,8 +30,9 @@ Run from the repository root; each one covers every workspace.
 
 `apps/api/src/platform/` holds technical capabilities (config, database, health, http);
 `apps/api/src/modules/` holds business areas. `platform/` never imports `modules/` (lint enforces
-it). See DECISIONS.md, entry 8. `apps/web/src/` holds the React app, one folder per area (auth,
-courts, admin).
+it). See DECISIONS.md, entry 8. Fixed value sets are enum-like const objects in a module's
+`domain/` (`Role.ADMIN`), and each module's errors are functions in `<module>.errors.ts`
+(entry 20). `apps/web/src/` holds the React app, one folder per area (auth, courts, admin).
 
 ## Rules
 

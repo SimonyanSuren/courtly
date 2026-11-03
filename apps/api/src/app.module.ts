@@ -4,6 +4,7 @@ import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 
 import { authConfig } from './modules/auth/auth.config';
 import { AuthModule } from './modules/auth/auth.module';
+import { CourtsModule } from './modules/courts/courts.module';
 import { databaseConfig } from './platform/database/database.config';
 import { DatabaseModule } from './platform/database/database.module';
 import { HealthModule } from './platform/health/health.module';
@@ -19,6 +20,7 @@ import { SchemaValidationPipe } from './platform/http/schema-validation.pipe';
     DatabaseModule,
     HealthModule,
     AuthModule,
+    CourtsModule,
   ],
   // Registered as providers, not with useGlobalFilters() or useGlobalPipes(), so they also apply
   // in tests and can inject dependencies.

@@ -1,10 +1,10 @@
 import { type CanActivate, type ExecutionContext, Inject, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
-import { ApiError } from '../../../platform/http/api-error';
 import { readCookie } from '../../../platform/http/cookies';
 import { isPublicRoute } from '../../../platform/http/public.decorator';
 import { type AuthConfig, authConfig } from '../auth.config';
+import { AuthError } from '../auth.errors';
 import { AuthService } from '../auth.service';
 import { type AuthenticatedRequest } from '../decorators/current-user.decorator';
 import { sessionCookieName } from '../sessions/session-cookie';
@@ -32,7 +32,7 @@ export class AuthGuard implements CanActivate {
     const user = token === undefined ? undefined : await this.auth.authenticate(token);
 
     if (!user) {
-      throw new ApiError(401, 'UNAUTHORIZED', 'Log in to continue.');
+      throw AuthError.unauthorized();
     }
 
     request.user = user;

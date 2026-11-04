@@ -34,7 +34,7 @@ import { SchemaValidationPipe } from './platform/http/schema-validation.pipe';
   // in tests and can inject dependencies.
   providers: [
     { provide: APP_FILTER, useClass: ProblemDetailsFilter },
-    { provide: APP_PIPE, useValue: new SchemaValidationPipe() },
+    { provide: APP_PIPE, useClass: SchemaValidationPipe },
   ],
 })
 export class AppModule {}

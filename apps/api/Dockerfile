@@ -41,9 +41,11 @@ COPY package.json package-lock.json .npmrc ./
 COPY apps/api/package.json apps/api/
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --workspace apps/api --omit=dev --no-audit --no-fund
-# Type definitions never run. --omit=dev keeps @types/node and @types/pg because drizzle-orm
-# lists @types/pg as an optional peer, which the lockfile marks devOptional instead of dev.
-RUN rm -rf node_modules/@types
+# Type definitions and the compiler never run. --omit=dev keeps @types/node, @types/pg and
+# TypeScript because runtime dependencies list them as optional peers (drizzle-orm lists
+# @types/pg; @nestjs/swagger lists TypeScript, for its compiler plugin), which the lockfile marks
+# devOptional instead of dev.
+RUN rm -rf node_modules/@types node_modules/typescript
 
 
 # ---- runtime ------------------------------------------------------------------------------------

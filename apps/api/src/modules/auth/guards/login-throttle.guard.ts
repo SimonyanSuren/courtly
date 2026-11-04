@@ -9,8 +9,10 @@ import { type AuthConfig } from '../auth.config';
 import { AuthError } from '../auth.errors';
 import { loginSchema } from '../dto/login.dto';
 
-const WINDOW_MILLISECONDS = 15 * 60 * 1000;
+/** How long attempts count, and how long a client that made too many waits. */
+export const LOGIN_WINDOW_MINUTES = 15;
 const SECONDS_PER_MINUTE = 60;
+const WINDOW_MILLISECONDS = LOGIN_WINDOW_MINUTES * SECONDS_PER_MINUTE * 1000;
 
 const emailOnly = loginSchema.pick({ email: true });
 

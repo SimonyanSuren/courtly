@@ -118,16 +118,17 @@ the tests cover them.
 
 ## 8. Code structure: `src/platform/` and `src/modules/`
 
-- **Chosen:** in `apps/api/src`, technical capabilities live in `platform/` (clock, config,
-  database, health, http) and business areas in `modules/`, one folder each, created when it has
-  content. `app.module.ts` is the only file that wires every module together; the seed beside
-  it imports their tables. Lint rejects any import
-  from `platform/` into `modules/`.
+- **Chosen:** in `apps/api/src`, technical capabilities live in `platform/` (api-docs, clock,
+  config, database, health, http) and business areas in `modules/`, one folder each, created when
+  it has content. `app.module.ts` is the only file that wires every module together; the seed
+  beside it imports their tables, and `app.setup.ts` the session cookie's name for the API
+  reference. Lint rejects any import from `platform/` into `modules/`.
 - **Inside a module:** the Nest CLI layout. The module, controller, service and repository files
   sit at the top, next to `<name>.schema.ts`, the module's Drizzle tables. `dto/` holds the Zod
-  schemas that validate requests and, where the JSON differs from the module's values, the
-  response types and the functions that build them (`bookings/dto/responses.ts`). `guards/` or
-  `decorators/` appear where a module has them. A part of a module with several files of its own
+  schemas that validate requests (`new-court.dto.ts`) and those that describe responses, one file
+  each (`booking.response.ts`), with the types inferred from them, and, where the JSON differs
+  from the module's values, the functions that build it. `guards/` or `decorators/` appear where
+  a module has them. A part of a module with several files of its own
   gets a folder, such as `auth/sessions/` (table, repository, cookie and token). Business rules
   that need neither the database nor HTTP, such as opening hours or the cancellation window, are
   pure functions in a `domain/` folder, tested without Nest; services call them and turn a broken
@@ -286,7 +287,8 @@ the tests cover them.
   caches the hashed files in `/assets/` for a year as immutable, and has browsers revalidate
   `index.html` on every load. Every response carries `X-Content-Type-Options: nosniff`,
   `Referrer-Policy: same-origin` and a Content Security Policy that allows only this origin,
-  inline styles (Mantine adds `<style>` elements at run time) and no framing.
+  inline styles (Mantine adds `<style>` elements at run time), `data:` images (the API
+  reference's stylesheet draws its icons with them; an image cannot run code) and no framing.
 - **Why:** one origin for the app and the API keeps the session cookie first-party and needs no
   CORS. Nest's cross-origin check compares Origin with Host when Sec-Fetch-Site is missing; with
   nginx's default Host (`api:3000`) or `$host` (no port), same-origin requests would be rejected.
@@ -445,7 +447,9 @@ the tests cover them.
   same name, in the module's `domain/`: `Role.ADMIN`, `Sport.PADEL`. The database enum
   (`pgEnum`), the request validation (`z.enum`) and the code read the same object. Each module's
   errors are functions in `<module>.errors.ts`, such as `CourtError.notFound()`, each with its
-  status, code and sentence.
+  status, code and sentence. The errors any route can answer, whatever its module, are
+  `HttpError` functions in `platform/http/http.errors.ts`: `VALIDATION_FAILED` from the schema
+  pipe and `UNAUTHORIZED` for a missing session, which platform code also uses.
 - **Why:** one list feeds the database, the validation and the code, so they cannot drift apart;
   a name says what a comparison means, and the editor finds every use. Members are UPPER_CASE,
   as the lint configuration asks of TypeScript enum members and as in Nest's
@@ -500,8 +504,8 @@ the tests cover them.
   deleted. A booking stores its price. The time now comes from an injectable `Clock` that tests
   replace. Availability lives in the bookings module and reads courts through `CourtsService`.
   Expected revenue is summed from the day view's own rows. The service works with Temporal
-  values; `dto/responses.ts` writes them as the JSON in `docs/api.md`, and the controllers call
-  it.
+  values; the `*.response.ts` files in `dto/` write them as the JSON in `docs/api.md`, and the
+  controllers call them.
 - **Why:** under READ COMMITTED a lookup cannot see a booking another request has inserted but not
   committed, so both requests would find the slot free. The constraint sees the uncommitted row:
   the second insert waits for the first to commit, then fails. Opening hours and prices change, so
@@ -570,3 +574,44 @@ the tests cover them.
   - Running it in `npm test`: it takes minutes, and the tests check behaviour, not timings.
   - Generating rows in TypeScript and inserting them in batches: slower, and the data's shape
     would be buried in a loop instead of one statement.
+
+## 25. API reference: Swagger UI and OpenAPI generated from the Zod schemas
+
+- **Chosen:** `@nestjs/swagger` serves Swagger UI at `/api/docs` and the OpenAPI 3.0 document at
+  `/api/docs/openapi.json`, public and always on. Request bodies and query strings come from the
+  Zod schemas the routes validate with, through the Standard JSON Schema interface Zod
+  implements, as the client sends them: a date is a string, not a Temporal value. Responses are
+  Zod schemas, one file each in a module's `dto/` (`booking.response.ts`), with their types
+  inferred from them; nothing parses a response. Where a database type describes the same value
+  (Court, PublicUser), `satisfies` and the routes' return types make the compiler reject a schema
+  that differs from it. Each route has one `@ApiRoute({ ... })`: its summary, its success status,
+  schema and description, and the errors the code throws, shown as the exception filter writes
+  them. A route is marked as needing the session cookie, with its 401, unless it says
+  `isPublic: true`, as a `@Public()` route does. Every route also has OpenAPI's `default`
+  response, which stands for any status it does not list: Problem Details too, with the 500 as
+  its example. The validation error is listed like any other, with an example of the route's own
+  fields. A test compares the documented routes with the ones the app answers, requires a summary,
+  a success response and the `default` for each, and checks that a route answers 401 without a
+  session exactly when the reference says it needs one.
+- **Why:** anyone can try every route and see its shapes without reading the code, and the
+  reference comes from what the code validates, throws and returns, so it cannot drift
+  unnoticed. On the app's origin, logging in through Swagger UI leaves the httpOnly cookie in the
+  browser, which sends it with every later request; nothing is pasted. The reference describes
+  routes anyone can already call and holds no secret; every route still checks the session and
+  the role. Nest adds these routes to Express directly, so the global guards do not apply to them.
+- **Rejected:**
+  - A hand-written OpenAPI file, or `docs/api.md` alone: a second description of every shape,
+    which drifts from the code.
+  - DTO classes with class-validator and the Nest CLI Swagger plugin: a second validation system
+    next to Zod, and a compiler plugin the tests do not run.
+  - Packages that bridge Zod and OpenAPI: Nest's Swagger module reads Standard Schema itself.
+  - Parsing responses with their schemas: every request would pay to recheck values the database
+    and the rules already checked; the compiler checks the types.
+  - The reference only in development, or behind a login: it describes routes that are reachable
+    anyway, and the demo exists to be tried.
+  - `@ApiRoute` also applying `@Public()` or `@HttpCode()`: one declaration instead of two, but a
+    decorator that describes a route would decide who may call it and what it answers. The test
+    fails when the reference and the guard disagree about the session.
+  - The validation error on every route by default: 7 of the 13 routes have no input to validate.
+  - A 500 listed on every route: `default` covers it, and every other status a route does not
+    list, such as a 400 for a body that is not JSON.

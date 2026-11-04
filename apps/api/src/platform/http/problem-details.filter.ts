@@ -9,21 +9,27 @@ import {
   Logger,
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
+import { z } from 'zod';
 
-import { ApiError, type FieldError } from './api-error';
+import { ApiError, type FieldError, fieldErrorSchema } from './api-error';
 
 /**
  * The body of every error response: RFC 9457 Problem Details. `type` stays `about:blank`, so
  * `title` is the HTTP status phrase; `code` and `errors` are extension members.
  */
-interface ProblemDetails {
-  readonly type: 'about:blank';
-  readonly title: string;
-  readonly status: number;
-  readonly detail: string;
-  readonly code: string;
-  readonly errors?: readonly FieldError[];
-}
+export const problemDetailsSchema = z.object({
+  type: z.literal('about:blank'),
+  title: z.string().meta({ description: 'The HTTP status phrase, e.g. `Conflict`.' }),
+  status: z.number().int().min(400).max(599),
+  detail: z.string().meta({ description: 'A sentence a user can read.' }),
+  code: z.string().meta({ description: 'Stable for programs, e.g. `SLOT_TAKEN`.' }),
+  errors: z
+    .array(fieldErrorSchema)
+    .optional()
+    .meta({ description: 'Each invalid value, with the code `VALIDATION_FAILED` only.' }),
+});
+
+export type ProblemDetails = z.output<typeof problemDetailsSchema>;
 
 /** Errors from Express middleware, such as malformed JSON, carry a status and `expose`. */
 interface ExposableHttpError {
@@ -61,11 +67,13 @@ function problemDetails(
     status,
     detail,
     code,
-    ...(errors && { errors }),
+    // A copy: the schema's type has a mutable array, which a readonly one is not assignable to.
+    ...(errors && { errors: [...errors] }),
   };
 }
 
-function toProblemDetails(exception: unknown): ProblemDetails {
+/** The response for an error; also what the API reference shows as each error's example. */
+export function toProblemDetails(exception: unknown): ProblemDetails {
   if (exception instanceof ApiError) {
     return problemDetails(exception.status, exception.code, exception.message, exception.errors);
   }

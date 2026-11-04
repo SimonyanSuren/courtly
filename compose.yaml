@@ -10,8 +10,9 @@
 #
 # The app is at http://localhost:8080 and calls the API under /api on that origin. Log in as
 # admin@example.com, ana@example.com or rui@example.com, password courtly-demo. The API also
-# answers directly on http://127.0.0.1:3000/api; GET /api/health checks it and its database. The
-# tests start their own PostgreSQL.
+# answers directly on http://127.0.0.1:3000/api; GET /api/health checks it and its database. Its
+# reference, where every route can be tried, is at http://localhost:8080/api/docs. The tests start
+# their own PostgreSQL.
 # Ports bind to 127.0.0.1: Docker publishes on all interfaces by default, and its NAT rules
 # bypass host firewalls such as ufw. Credentials are local-only and match apps/api/.env.example.
 

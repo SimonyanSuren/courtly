@@ -4,6 +4,7 @@ import {
   Cookies,
   Get,
   HttpCode,
+  HttpStatus,
   Inject,
   Post,
   Res,
@@ -11,15 +12,19 @@ import {
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 
+import { ApiRoute } from '../../platform/api-docs/api-route.decorator';
+import { HttpError } from '../../platform/http/http.errors';
 import { Public } from '../../platform/http/public.decorator';
 import { Role } from '../users/domain/role';
+import { type UserResponse, userSchema } from '../users/dto/user.response';
 import { type PublicUser } from '../users/users.schema';
 import { type AuthConfig, authConfig } from './auth.config';
+import { AuthError } from './auth.errors';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { Roles } from './decorators/roles.decorator';
 import { type LoginDto, loginSchema } from './dto/login.dto';
-import { LoginThrottleGuard } from './guards/login-throttle.guard';
+import { LOGIN_WINDOW_MINUTES, LoginThrottleGuard } from './guards/login-throttle.guard';
 import { sessionCookieName, sessionCookieOptions } from './sessions/session-cookie';
 
 @Controller('auth')
@@ -34,6 +39,19 @@ export class AuthController {
   @Public()
   // Counts every attempt before the body is validated or the password checked.
   @UseGuards(LoginThrottleGuard)
+  @ApiRoute({
+    summary: 'Log in (public)',
+    response: userSchema,
+    description: 'The user; the session cookie is set.',
+    errors: [
+      HttpError.validationFailed([
+        { in: 'body', path: 'password', message: 'Enter your password.' },
+      ]),
+      AuthError.invalidCredentials(),
+      AuthError.tooManyLoginAttempts(LOGIN_WINDOW_MINUTES),
+    ],
+    isPublic: true,
+  })
   @Post('login')
   @HttpCode(200)
   async login(
@@ -41,7 +59,7 @@ export class AuthController {
     @Cookies() cookies: Record<string, string | undefined>,
     // passthrough: Nest still sends the returned body; the response is only for the cookie.
     @Res({ passthrough: true }) response: unknown,
-  ): Promise<PublicUser> {
+  ): Promise<UserResponse> {
     const name = sessionCookieName(this.config);
     const { token, user } = await this.auth.login(email, password, cookies[name]);
     this.adapterHost.httpAdapter.setCookie(
@@ -59,6 +77,12 @@ export class AuthController {
    * that has already expired; without a session it only clears the cookie.
    */
   @Public()
+  @ApiRoute({
+    summary: 'Log out (public)',
+    status: HttpStatus.NO_CONTENT,
+    description: 'The session ends and the cookie clears.',
+    isPublic: true,
+  })
   @Post('logout')
   @HttpCode(204)
   async logout(
@@ -79,8 +103,13 @@ export class AuthController {
   }
 
   @Roles([Role.USER, Role.ADMIN])
+  @ApiRoute({
+    summary: 'The logged-in user (any role)',
+    response: userSchema,
+    description: 'The user the session belongs to.',
+  })
   @Get('me')
-  me(@CurrentUser() user: PublicUser): PublicUser {
+  me(@CurrentUser() user: PublicUser): UserResponse {
     return user;
   }
 }

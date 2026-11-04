@@ -4,10 +4,8 @@ import { asc, eq } from 'drizzle-orm';
 import request, { type Response } from 'supertest';
 
 import { bookings } from '../src/modules/bookings/bookings.schema';
-import {
-  type BookingResponse,
-  type MyBookingsResponse,
-} from '../src/modules/bookings/dto/responses';
+import { type BookingResponse } from '../src/modules/bookings/dto/booking.response';
+import { type MyBookingsResponse } from '../src/modules/bookings/dto/my-bookings.response';
 import { DATABASE, type Database } from '../src/platform/database/database';
 import { createTestAppWithClock, insertCourt, TestClock } from './bookings';
 import { whileUncommitted } from './concurrency';

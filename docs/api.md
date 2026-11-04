@@ -3,6 +3,10 @@
 The contract between the web app and the API. Every path starts with `/api`. Requests and
 responses are JSON; errors are Problem Details (RFC 9457).
 
+The API also serves a reference built from its code, where every route can be tried: Swagger UI
+at `/api/docs` (http://localhost:8080/api/docs under Docker Compose) and the OpenAPI document at
+`/api/docs/openapi.json`. This page keeps the conventions and the rules.
+
 ## Conventions
 
 - **Sessions:** `POST /api/auth/login` starts a session kept in an httpOnly cookie, which the
@@ -38,7 +42,8 @@ Every error has the content type `application/problem+json`:
 `VALIDATION_FAILED` also lists each invalid value in `errors`:
 `{ "in": "body" | "query" | "param", "path": "hours", "message": "Must be 1 or 2." }`. Each
 `message` is a sentence to show next to the field, with amounts in euros: "Must be at most
-€1,000.00 an hour."
+€1,000.00 an hour." An error without a code of its own carries the status's name, such as 400
+`BAD_REQUEST` for a body that is not valid JSON.
 
 | Status | Meaning                                                     |
 | ------ | ----------------------------------------------------------- |
@@ -49,6 +54,7 @@ Every error has the content type `application/problem+json`:
 | 409    | The request conflicts with the current state                |
 | 422    | The request is well formed but breaks a booking rule        |
 | 429    | Too many login attempts; the `Retry-After` header says when |
+| 500    | A fault of the API; the detail stays general                |
 
 ## Types
 
@@ -102,12 +108,12 @@ interface AdminBooking extends Booking {
 
 ### Login
 
-| Route                   | Role   | Body                  | Success                                     | Errors                                                   |
-| ----------------------- | ------ | --------------------- | ------------------------------------------- | -------------------------------------------------------- |
-| `POST /api/auth/login`  | public | `{ email, password }` | 200 `User`, and the session cookie is set   | 401 `INVALID_CREDENTIALS`, 429 `TOO_MANY_LOGIN_ATTEMPTS` |
-| `POST /api/auth/logout` | public |                       | 204, the session ends and the cookie clears |                                                          |
-| `GET /api/auth/me`      | any    |                       | 200 `User`                                  |                                                          |
-| `GET /api/health`       | public |                       | 200 `{ "status": "ok" }`                    | 503 when the database is down                            |
+| Route                   | Role   | Body                  | Success                                     | Errors                                                        |
+| ----------------------- | ------ | --------------------- | ------------------------------------------- | ------------------------------------------------------------- |
+| `POST /api/auth/login`  | public | `{ email, password }` | 200 `User`, and the session cookie is set   | 400, 401 `INVALID_CREDENTIALS`, 429 `TOO_MANY_LOGIN_ATTEMPTS` |
+| `POST /api/auth/logout` | public |                       | 204, the session ends and the cookie clears |                                                               |
+| `GET /api/auth/me`      | any    |                       | 200 `User`                                  |                                                               |
+| `GET /api/health`       | public |                       | 200 `{ "status": "ok" }`                    | 503 `SERVICE_UNAVAILABLE` when the database is down           |
 
 ### Courts
 

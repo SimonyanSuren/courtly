@@ -1,5 +1,8 @@
 import { type NestExpressApplication } from '@nestjs/platform-express';
 
+import { type AuthConfig, authConfig } from './modules/auth/auth.config';
+import { sessionCookieName } from './modules/auth/sessions/session-cookie';
+import { setUpApiDocs } from './platform/api-docs/api-docs';
 import { type HttpConfig, httpConfig } from './platform/http/http.config';
 
 /** HTTP settings main.ts and the HTTP tests share, so the tests exercise the API as it ships. */
@@ -14,4 +17,7 @@ export function configureApp(app: NestExpressApplication): void {
   // This rejects state-changing requests (POST, PUT, PATCH, DELETE) from another origin with 403,
   // judged by the Sec-Fetch-Site header, or by Origin against Host for older browsers.
   app.enableCsrfProtection();
+  // The cookie's name depends on the configuration (__Host-session over HTTPS), and the
+  // reference names it.
+  setUpApiDocs(app, sessionCookieName(app.get<AuthConfig>(authConfig.KEY)));
 }

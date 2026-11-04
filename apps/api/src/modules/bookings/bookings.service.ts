@@ -14,7 +14,7 @@ import { expectedRevenueCents } from './domain/revenue';
 import { calendarDay, daySlots, type SlotStatus, slotStatus, type TimeRange } from './domain/slots';
 import { type NewBookingDto } from './dto/new-booking.dto';
 
-// What the service answers, in Temporal values; dto/responses.ts writes each one as JSON.
+// What the service answers, in Temporal values; a file in dto/ writes each one as JSON.
 
 export interface MyBookings {
   /** Not ended yet, soonest first. */

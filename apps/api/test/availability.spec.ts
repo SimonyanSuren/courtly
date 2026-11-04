@@ -2,10 +2,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from '@jest/glo
 import { type NestExpressApplication } from '@nestjs/platform-express';
 import request, { type Response } from 'supertest';
 
-import {
-  type AvailabilityResponse,
-  type BookingResponse,
-} from '../src/modules/bookings/dto/responses';
+import { type AvailabilityResponse } from '../src/modules/bookings/dto/availability.response';
+import { type BookingResponse } from '../src/modules/bookings/dto/booking.response';
 import { DATABASE, type Database } from '../src/platform/database/database';
 import { createTestAppWithClock, insertCourt, TestClock } from './bookings';
 import { resetDatabase } from './database';

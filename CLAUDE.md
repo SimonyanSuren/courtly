@@ -24,6 +24,11 @@ Run from the repository root; each one covers every workspace.
 - API tests import `describe`, `it` and `expect` from `@jest/globals`; HTTP tests live in
   `apps/api/test/` and boot the app with `createTestApp()`, unit tests sit next to the code as
   `*.spec.ts`. `npm test` needs Docker: it starts its own PostgreSQL with Testcontainers.
+- API reference: Swagger UI at `/api/docs` and the OpenAPI JSON at `/api/docs/openapi.json`
+  (http://localhost:8080/api/docs under Compose), generated from the controllers and their Zod
+  schemas. A new route needs `@ApiRoute({ summary, status, response, description, errors })`,
+  with the errors it throws, and `isPublic: true` when it is `@Public()`; `test/api-docs.spec.ts`
+  fails otherwise. Responses are Zod schemas, one file each: `dto/<name>.response.ts`.
 - `npm run perf -w apps/api`: times availability and the day view on 10k, 100k and 1M synthetic
   bookings in its own PostgreSQL (needs Docker, about 3 minutes); results in
   `docs/performance.md`. `npm test` does not run it.
@@ -38,11 +43,12 @@ Run from the repository root; each one covers every workspace.
 
 ## Structure
 
-`apps/api/src/platform/` holds technical capabilities (clock, config, database, health, http);
-`apps/api/src/modules/` holds business areas. `platform/` never imports `modules/` (lint enforces
-it). See DECISIONS.md, entry 8. Fixed value sets are enum-like const objects in a module's
-`domain/` (`Role.ADMIN`), and each module's errors are functions in `<module>.errors.ts`
-(entry 20). `apps/web/src/` holds the React app, one folder per area (auth, courts, admin).
+`apps/api/src/platform/` holds technical capabilities (api-docs, clock, config, database, health,
+http); `apps/api/src/modules/` holds business areas. `platform/` never imports `modules/` (lint
+enforces it). See DECISIONS.md, entry 8. Fixed value sets are enum-like const objects in a module's
+`domain/` (`Role.ADMIN`), and each module's errors are functions in `<module>.errors.ts`; the
+errors any route can answer are in `platform/http/http.errors.ts` (entry 20). `apps/web/src/`
+holds the React app, one folder per area (auth, courts, admin).
 
 ## Rules
 

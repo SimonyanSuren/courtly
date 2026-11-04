@@ -1,11 +1,11 @@
 import {
   type ArgumentMetadata,
-  HttpStatus,
   StandardSchemaValidationPipe,
   type StandardSchemaValidationPipeOptions,
 } from '@nestjs/common';
 
-import { ApiError, type FieldError } from './api-error';
+import { type FieldError } from './api-error';
+import { HttpError } from './http.errors';
 
 type SchemaIssue = Parameters<
   NonNullable<StandardSchemaValidationPipeOptions['exceptionFactory']>
@@ -51,12 +51,7 @@ export class SchemaValidationPipe extends StandardSchemaValidationPipe {
         throw error;
       }
 
-      throw new ApiError(
-        HttpStatus.BAD_REQUEST,
-        'VALIDATION_FAILED',
-        'The request has invalid values.',
-        error.issues.map((issue) => toFieldError(issue, metadata)),
-      );
+      throw HttpError.validationFailed(error.issues.map((issue) => toFieldError(issue, metadata)));
     }
   }
 }

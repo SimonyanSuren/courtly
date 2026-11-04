@@ -2,9 +2,9 @@ import { type CanActivate, type ExecutionContext, Inject, Injectable } from '@ne
 import { Reflector } from '@nestjs/core';
 
 import { readCookie } from '../../../platform/http/cookies';
+import { HttpError } from '../../../platform/http/http.errors';
 import { isPublicRoute } from '../../../platform/http/public.decorator';
 import { type AuthConfig, authConfig } from '../auth.config';
-import { AuthError } from '../auth.errors';
 import { AuthService } from '../auth.service';
 import { type AuthenticatedRequest } from '../decorators/current-user.decorator';
 import { sessionCookieName } from '../sessions/session-cookie';
@@ -32,7 +32,7 @@ export class AuthGuard implements CanActivate {
     const user = token === undefined ? undefined : await this.auth.authenticate(token);
 
     if (!user) {
-      throw AuthError.unauthorized();
+      throw HttpError.unauthorized();
     }
 
     request.user = user;

@@ -13,8 +13,6 @@ export const AuthError = {
       'INVALID_CREDENTIALS',
       'The email or password is not correct.',
     ),
-  unauthorized: (): ApiError =>
-    new ApiError(HttpStatus.UNAUTHORIZED, 'UNAUTHORIZED', 'Log in to continue.'),
   forbidden: (): ApiError =>
     new ApiError(HttpStatus.FORBIDDEN, 'FORBIDDEN', 'Your account does not have access to this.'),
   tooManyLoginAttempts: (minutes: number): ApiError =>

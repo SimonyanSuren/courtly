@@ -1,11 +1,18 @@
+import { z } from 'zod';
+
 /** One invalid input value, as reported in a validation error. */
-export interface FieldError {
-  /** Where the value came from: the body, the query string or a route parameter. */
-  readonly in: 'body' | 'query' | 'param' | 'custom';
-  /** Dot path to the value, e.g. `openingHours.close`; empty for the whole input. */
-  readonly path: string;
-  readonly message: string;
-}
+export const fieldErrorSchema = z.object({
+  // `custom` would be a parameter decorator of our own validated with a schema; no route has one.
+  in: z.enum(['body', 'query', 'param', 'custom']).meta({
+    description: 'Where the value came from: the body, the query string or a route parameter.',
+  }),
+  path: z.string().meta({
+    description: 'Dot path to the value, e.g. `closingHour`; empty for the whole input.',
+  }),
+  message: z.string(),
+});
+
+export type FieldError = Readonly<z.output<typeof fieldErrorSchema>>;
 
 /**
  * An error the API reports on purpose. ProblemDetailsFilter turns it into the response: `status`

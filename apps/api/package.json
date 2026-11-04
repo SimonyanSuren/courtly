@@ -9,16 +9,16 @@
   },
   "scripts": {
     "build": "nest build",
-    "start": "nest start --env-file .env",
-    "start:dev": "nest start --watch --env-file .env",
-    "start:debug": "nest start --debug --watch --env-file .env",
-    "start:prod": "node --enable-source-maps dist/main.js",
+    "start": "NODE_ENV=production nest start --env-file .env",
+    "start:dev": "NODE_ENV=production nest start --watch --env-file .env",
+    "start:debug": "NODE_ENV=production nest start --debug --watch --env-file .env",
+    "start:prod": "NODE_ENV=production node --enable-source-maps dist/main.js",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "node --enable-source-maps --env-file-if-exists=.env dist/migrate.js",
-    "db:seed": "node --enable-source-maps --env-file-if-exists=.env dist/seed.js",
+    "db:migrate": "NODE_ENV=production node --enable-source-maps --env-file-if-exists=.env dist/migrate.js",
+    "db:seed": "NODE_ENV=production node --enable-source-maps --env-file-if-exists=.env dist/seed.js",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "NODE_OPTIONS='--experimental-vm-modules --disable-warning=ExperimentalWarning' jest",
-    "perf": "NODE_OPTIONS='--experimental-vm-modules --disable-warning=ExperimentalWarning' jest --config jest.perf.config.mjs"
+    "test": "NODE_ENV=production NODE_OPTIONS='--experimental-vm-modules --disable-warning=ExperimentalWarning' jest",
+    "perf": "NODE_ENV=production NODE_OPTIONS='--experimental-vm-modules --disable-warning=ExperimentalWarning' jest --config jest.perf.config.mjs"
   },
   "dependencies": {
     "@nestjs/common": "12.3.2",

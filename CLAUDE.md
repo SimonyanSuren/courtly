@@ -55,6 +55,8 @@ holds the React app, one folder per area (auth, courts, admin).
 - Show every change as a diff and commit only after the user's OK.
 - Dependencies are pinned exactly (`.npmrc`: `save-exact`, `ignore-scripts`). The Node version
   comes from `.nvmrc`.
+- The API runs with `NODE_ENV=production` everywhere, tests included (entry 26). Never branch on
+  `NODE_ENV`: a behaviour that differs between machines gets a named setting in `.env.example`.
 - Commits follow Conventional Commits; commitlint runs in the `commit-msg` hook.
 - Decisions go in [DECISIONS.md](DECISIONS.md): what was chosen, what was rejected, and why.
 - Comments explain the non-obvious why. Verify version-sensitive claims against primary sources

@@ -613,3 +613,22 @@ the tests cover them.
   - The validation error on every route by default: 7 of the 13 routes have no input to validate.
   - A 500 listed on every route: `default` covers it, and every other status a route does not
     list, such as a 400 for a body that is not JSON.
+
+## 26. NODE_ENV is production wherever the API runs
+
+- **Chosen:** `NODE_ENV=production` in the API's image and in every script that runs its code:
+  `start`, `start:dev`, `start:debug`, `start:prod`, `db:migrate`, `db:seed`, `test` and `perf`.
+  The API's code never reads it: what differs between machines is a named setting in `.env`, such
+  as `SESSION_COOKIE_SECURE`.
+- **Why:** Node.js itself does not read `NODE_ENV`; libraries do, so under another value a test
+  or a local run exercises a different program than the image runs. Of the API's dependencies,
+  Express reads it: unless it is `production`, Express's last-resort error handler puts the stack
+  trace in the response. Jest sets `NODE_ENV=test` only when it is unset.
+- **Rejected:**
+  - `development` locally and `test` under Jest, the libraries' defaults: the code tested would
+    not be the code shipped.
+  - Branching on `NODE_ENV` in the code: one value would switch several unrelated things, where a
+    named setting says what it changes.
+  - The same for the web app: in the browser, `NODE_ENV` is Vite's mode, fixed when the code is
+    built. `vite build` always builds for production; the dev server and Vitest need React's
+    development build, for Fast Refresh and for `act()` in the tests.

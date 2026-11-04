@@ -307,7 +307,7 @@ export default defineConfig(
       'import-x/no-extraneous-dependencies': [
         'error',
         {
-          devDependencies: ['**/*.spec.ts', '**/test/**', '**/*.config.ts'],
+          devDependencies: ['**/*.spec.ts', '**/test/**', '**/perf/**', '**/*.config.ts'],
           optionalDependencies: false,
           peerDependencies: false,
         },

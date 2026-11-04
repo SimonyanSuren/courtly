@@ -544,3 +544,29 @@ the tests cover them.
     would bring back rows someone had deleted.
   - A table recording that the seed ran: an existing user already tells.
   - Fixed dates: the upcoming bookings would be in the past within days.
+
+## 24. Query performance, measured; availability on the no-overlap constraint's index
+
+- **Chosen:** `npm run perf -w apps/api` starts its own PostgreSQL 18 with Testcontainers, fills
+  it with 10,000, 100,000 and 1,000,000 synthetic bookings (one `INSERT ... SELECT` each), and
+  times availability and the admin day view as the repository sends them, with their plans.
+  `docs/performance.md` records the method, the numbers and the plans. Availability's condition
+  is now the constraint's own expression, so the GiST index behind `bookings_no_overlap` finds the
+  court and the time together:
+  `tstzrange(starts_at, ends_at, '[)') && tstzrange($start, $end, '[)')`. The day view stays on
+  `bookings_starts_at_index`. No index was added.
+- **Why:** both queries ask about one day, but bookings are never deleted. Written as
+  `starts_at < end and ends_at > start`, the condition let the index match only the court, so
+  availability read every confirmed booking the court ever had: 51.7 ms at a million bookings,
+  growing with the history. As the constraint's expression it reads the day's rows, about 1 ms at
+  every size. The run fails if an index stops answering its query's whole condition, or if
+  availability selects other bookings than the plain comparison. A repository test pins the
+  edges of a day, which availability's own check in code would hide.
+- **Rejected:**
+  - A btree index on `(court_id, starts_at)`: one more index to maintain on every insert, for rows
+    the constraint's index already finds.
+  - Bounding the scan with `starts_at > start - 2 hours`: the query would silently depend on the
+    2-hour maximum.
+  - Running it in `npm test`: it takes minutes, and the tests check behaviour, not timings.
+  - Generating rows in TypeScript and inserting them in batches: slower, and the data's shape
+    would be buried in a loop instead of one statement.

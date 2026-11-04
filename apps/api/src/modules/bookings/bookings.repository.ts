@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, eq, gt, gte, lt } from 'drizzle-orm';
+import { and, asc, eq, gte, lt, sql } from 'drizzle-orm';
 
 import { DATABASE, type Database } from '../../platform/database/database';
 import { type Court, courts } from '../courts/courts.schema';
@@ -152,9 +152,18 @@ export class BookingsRepository {
     return cancelled === undefined ? undefined : this.stored(cancelled.id);
   }
 
-  /** The times of the court's confirmed bookings that overlap `range`. */
+  /**
+   * The times of the court's confirmed bookings that overlap `range`. The condition is the one
+   * BOOKINGS_NO_OVERLAP checks, in the same terms, so the GiST index behind it finds the court's
+   * bookings on that day directly. Written as `starts_at < end and ends_at > start`, which selects
+   * the same rows, the index could match only the court: the query would read every confirmed
+   * booking the court ever had, and slow down as the history grows.
+   */
   async confirmedTimes(courtId: string, range: TimeRange): Promise<TimeRange[]> {
-    const [start, end] = [toDate(range.start), toDate(range.end)];
+    // The expression the constraint indexes, as it is written there, and `range` built the same
+    // way. Its ends go as ISO 8601 strings, which PostgreSQL reads as timestamptz exactly.
+    const booked = sql`tstzrange(${bookings.startsAt}, ${bookings.endsAt}, '[)')`;
+    const asked = sql`tstzrange(${range.start.toString()}, ${range.end.toString()}, '[)')`;
     const rows = await this.db
       .select({ startsAt: bookings.startsAt, endsAt: bookings.endsAt })
       .from(bookings)
@@ -162,8 +171,7 @@ export class BookingsRepository {
         and(
           eq(bookings.courtId, courtId),
           eq(bookings.status, BookingStatus.CONFIRMED),
-          lt(bookings.startsAt, end),
-          gt(bookings.endsAt, start),
+          sql`${booked} && ${asked}`,
         ),
       );
 

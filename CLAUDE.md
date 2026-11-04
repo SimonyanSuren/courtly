@@ -24,6 +24,9 @@ Run from the repository root; each one covers every workspace.
 - API tests import `describe`, `it` and `expect` from `@jest/globals`; HTTP tests live in
   `apps/api/test/` and boot the app with `createTestApp()`, unit tests sit next to the code as
   `*.spec.ts`. `npm test` needs Docker: it starts its own PostgreSQL with Testcontainers.
+- `npm run perf -w apps/api`: times availability and the day view on 10k, 100k and 1M synthetic
+  bookings in its own PostgreSQL (needs Docker, about 3 minutes); results in
+  `docs/performance.md`. `npm test` does not run it.
 - Jest's `toEqual` treats any two Temporal objects as equal (they have no own properties): compare
   them as ISO strings.
 - CI (`.github/workflows/ci.yaml`) runs format:check, lint, typecheck, knip, build and test, then

@@ -69,8 +69,8 @@ describe('court management', () => {
     renderApp('/admin/courts');
 
     expect(tableRows(await screen.findByRole('table'))).toEqual([
-      ['Court 1', 'padel', '€15.00', '08:00–22:00', 'Active', 'EditDeactivate'],
-      ['Court 2', 'tennis', '€20.50', '00:00–24:00', 'Inactive', 'EditReactivate'],
+      ['Court 1', 'Padel', '€15.00', '08:00–22:00', 'Active', 'EditDeactivate'],
+      ['Court 2', 'Tennis', '€20.50', '00:00–24:00', 'Inactive', 'EditReactivate'],
     ]);
   });
 
@@ -119,7 +119,7 @@ describe('court management', () => {
     expect(requestCount(fetchMock, 'GET /api/courts')).toBe(2);
     expect(tableRows(courtTable())[1]).toEqual([
       'Court 3',
-      'squash',
+      'Squash',
       '€15.10',
       '07:00–23:00',
       'Active',
@@ -221,7 +221,7 @@ describe('court management', () => {
     expect(requestCount(fetchMock, 'GET /api/courts')).toBe(2);
     expect(tableRows(courtTable())[0]).toEqual([
       'Court 1',
-      'padel',
+      'Padel',
       '€18.50',
       '08:00–23:00',
       'Active',

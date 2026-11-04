@@ -16,6 +16,7 @@ import { useId, useState } from 'react';
 
 import { errorMessage } from '../api';
 import { formatDate, formatPrice, formatTimeRange } from '../format';
+import { TablePanel } from '../table-panel';
 import { type Booking, describeBooking, useCancelBooking, useMyBookings } from './bookings';
 
 /** The same rule as the server's: a confirmed booking, up to and including cancellableUntil. */
@@ -38,65 +39,68 @@ function BookingTable({
 
   return (
     <Stack gap="xs">
-      <Title order={2} id={headingId}>
+      <Title order={2} size="h3" id={headingId}>
         {title}
       </Title>
       {bookings.length === 0 ? (
         <Text c="dimmed">No {title.toLowerCase()} bookings.</Text>
       ) : (
-        // On a phone the table scrolls sideways instead of squeezing its columns.
-        <Table.ScrollContainer minWidth={640} type="native">
-          <Table aria-labelledby={headingId}>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Court</Table.Th>
-                <Table.Th>Date</Table.Th>
-                <Table.Th>Time</Table.Th>
-                <Table.Th>Price</Table.Th>
-                <Table.Th>Status</Table.Th>
-                <Table.Th>
-                  <VisuallyHidden>Action</VisuallyHidden>
-                </Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {bookings.map((booking) => (
-                <Table.Tr key={booking.id}>
-                  <Table.Td>{booking.court.name}</Table.Td>
-                  <Table.Td>{formatDate(booking.startsAt)}</Table.Td>
-                  <Table.Td>{formatTimeRange(booking.startsAt, booking.endsAt)}</Table.Td>
-                  <Table.Td>{formatPrice(booking.priceCents)}</Table.Td>
-                  <Table.Td>
-                    {booking.status === 'confirmed' ? (
-                      <Badge color="green" variant="light">
-                        Confirmed
-                      </Badge>
-                    ) : (
-                      <Badge color="gray" variant="light">
-                        Cancelled
-                      </Badge>
-                    )}
-                  </Table.Td>
-                  <Table.Td>
-                    {canCancel(booking, now) && (
-                      <Button
-                        size="xs"
-                        color="red"
-                        variant="light"
-                        aria-label={`Cancel ${describeBooking(booking)}`}
-                        onClick={() => {
-                          onCancel(booking);
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                    )}
-                  </Table.Td>
+        <TablePanel>
+          {/* On a phone the table scrolls sideways instead of squeezing its columns. */}
+          <Table.ScrollContainer minWidth={640} type="native">
+            {/* Fixed: columns of equal width, so the upcoming and past tables line up. */}
+            <Table layout="fixed" highlightOnHover verticalSpacing="sm" aria-labelledby={headingId}>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Court</Table.Th>
+                  <Table.Th>Date</Table.Th>
+                  <Table.Th>Time</Table.Th>
+                  <Table.Th>Price</Table.Th>
+                  <Table.Th>Status</Table.Th>
+                  <Table.Th>
+                    <VisuallyHidden>Action</VisuallyHidden>
+                  </Table.Th>
                 </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
-        </Table.ScrollContainer>
+              </Table.Thead>
+              <Table.Tbody>
+                {bookings.map((booking) => (
+                  <Table.Tr key={booking.id}>
+                    <Table.Td>{booking.court.name}</Table.Td>
+                    <Table.Td>{formatDate(booking.startsAt)}</Table.Td>
+                    <Table.Td>{formatTimeRange(booking.startsAt, booking.endsAt)}</Table.Td>
+                    <Table.Td>{formatPrice(booking.priceCents)}</Table.Td>
+                    <Table.Td>
+                      {booking.status === 'confirmed' ? (
+                        <Badge color="green" variant="light">
+                          Confirmed
+                        </Badge>
+                      ) : (
+                        <Badge color="gray" variant="light">
+                          Cancelled
+                        </Badge>
+                      )}
+                    </Table.Td>
+                    <Table.Td>
+                      {canCancel(booking, now) && (
+                        <Button
+                          size="xs"
+                          color="red"
+                          variant="light"
+                          aria-label={`Cancel ${describeBooking(booking)}`}
+                          onClick={() => {
+                            onCancel(booking);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      )}
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </Table.ScrollContainer>
+        </TablePanel>
       )}
     </Stack>
   );

@@ -7,6 +7,7 @@ import { type Mock, vi } from 'vitest';
 
 import { App } from './app';
 import { createQueryClient } from './query-client';
+import { theme } from './theme';
 
 export const ana = { id: 'u1', email: 'ana@example.com', name: 'Ana Silva', role: 'user' };
 
@@ -60,7 +61,7 @@ export function requestCount(fetchMock: FetchMock, request: string): number {
 export function renderApp(path: string): void {
   render(
     // The test environment turns off transitions, so content appears without waiting.
-    <MantineProvider env="test">
+    <MantineProvider theme={theme} env="test">
       <QueryClientProvider client={createQueryClient()}>
         <MemoryRouter initialEntries={[path]}>
           <App />

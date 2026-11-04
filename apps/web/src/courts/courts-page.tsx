@@ -13,7 +13,7 @@ import {
 import { Link } from 'react-router';
 
 import { errorMessage } from '../api';
-import { formatHour, formatPrice } from '../format';
+import { formatHour, formatPrice, formatSport } from '../format';
 import { useCourts } from './courts';
 
 function CourtList(): React.JSX.Element {
@@ -34,19 +34,20 @@ function CourtList(): React.JSX.Element {
   return (
     <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
       {courts.data.map((court) => (
-        <Card key={court.id} withBorder>
+        <Card key={court.id} withBorder shadow="sm" padding="lg">
           <Stack gap="xs">
-            <Group justify="space-between">
+            <Group justify="space-between" wrap="nowrap">
               <Title order={2} size="h3">
                 {court.name}
               </Title>
-              <Badge variant="light">{court.sport}</Badge>
+              <Badge variant="light">{formatSport(court.sport)}</Badge>
             </Group>
-            <Text>{formatPrice(court.hourlyPriceCents)} per hour</Text>
-            <Text c="dimmed">
+            <Text fw={600}>{formatPrice(court.hourlyPriceCents)} per hour</Text>
+            <Text c="dimmed" size="sm">
               Open {formatHour(court.openingHour)}–{formatHour(court.closingHour)}
             </Text>
             <Button
+              mt="xs"
               component={Link}
               to={`/courts/${court.id}`}
               aria-label={`See availability at ${court.name}`}

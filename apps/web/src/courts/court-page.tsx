@@ -20,7 +20,15 @@ import { Link, useParams, useSearchParams } from 'react-router';
 
 import { errorMessage } from '../api';
 import { describeBooking, useBookCourt } from '../bookings/bookings';
-import { formatDate, formatHour, formatPrice, formatTimeRange, today } from '../format';
+import {
+  formatDate,
+  formatHour,
+  formatPrice,
+  formatSport,
+  formatTimeRange,
+  today,
+} from '../format';
+import { TablePanel } from '../table-panel';
 import { type Court, type Slot, useAvailability } from './courts';
 
 const statuses: Record<Slot['status'], { label: string; color: string }> = {
@@ -42,9 +50,9 @@ function CourtDetails({ court }: Readonly<{ court: Court }>): React.JSX.Element 
     <Stack gap="xs">
       <Group>
         <Title>{court.name}</Title>
-        <Badge variant="light">{court.sport}</Badge>
+        <Badge variant="light">{formatSport(court.sport)}</Badge>
       </Group>
-      <Text>
+      <Text c="dimmed">
         {formatPrice(court.hourlyPriceCents)} per hour · Open {formatHour(court.openingHour)}–
         {formatHour(court.closingHour)}
       </Text>
@@ -60,47 +68,49 @@ function SlotTable({
   onBook: (slot: Slot, nextSlot: Slot | undefined) => void;
 }>): React.JSX.Element {
   return (
-    <Table>
-      <Table.Thead>
-        <Table.Tr>
-          <Table.Th>Time</Table.Th>
-          <Table.Th>Status</Table.Th>
-          <Table.Th>
-            <VisuallyHidden>Action</VisuallyHidden>
-          </Table.Th>
-        </Table.Tr>
-      </Table.Thead>
-      <Table.Tbody>
-        {slots.map((slot, index) => {
-          const time = formatTimeRange(slot.startsAt, slot.endsAt);
-          const status = statuses[slot.status];
+    <TablePanel>
+      <Table highlightOnHover verticalSpacing="sm">
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Time</Table.Th>
+            <Table.Th>Status</Table.Th>
+            <Table.Th>
+              <VisuallyHidden>Action</VisuallyHidden>
+            </Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {slots.map((slot, index) => {
+            const time = formatTimeRange(slot.startsAt, slot.endsAt);
+            const status = statuses[slot.status];
 
-          return (
-            <Table.Tr key={slot.startsAt}>
-              <Table.Td>{time}</Table.Td>
-              <Table.Td>
-                <Badge color={status.color} variant="light">
-                  {status.label}
-                </Badge>
-              </Table.Td>
-              <Table.Td>
-                {slot.status === 'available' && (
-                  <Button
-                    size="xs"
-                    aria-label={`Book ${time}`}
-                    onClick={() => {
-                      onBook(slot, slots[index + 1]);
-                    }}
-                  >
-                    Book
-                  </Button>
-                )}
-              </Table.Td>
-            </Table.Tr>
-          );
-        })}
-      </Table.Tbody>
-    </Table>
+            return (
+              <Table.Tr key={slot.startsAt}>
+                <Table.Td>{time}</Table.Td>
+                <Table.Td>
+                  <Badge color={status.color} variant="light">
+                    {status.label}
+                  </Badge>
+                </Table.Td>
+                <Table.Td>
+                  {slot.status === 'available' && (
+                    <Button
+                      size="xs"
+                      aria-label={`Book ${time}`}
+                      onClick={() => {
+                        onBook(slot, slots[index + 1]);
+                      }}
+                    >
+                      Book
+                    </Button>
+                  )}
+                </Table.Td>
+              </Table.Tr>
+            );
+          })}
+        </Table.Tbody>
+      </Table>
+    </TablePanel>
   );
 }
 
@@ -203,7 +213,7 @@ export function CourtPage(): React.JSX.Element {
 
   return (
     <Stack>
-      <Anchor component={Link} to="/courts">
+      <Anchor component={Link} to="/courts" size="sm">
         All courts
       </Anchor>
       {availability.data && <CourtDetails court={availability.data.court} />}

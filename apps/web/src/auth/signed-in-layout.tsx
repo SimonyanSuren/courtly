@@ -1,4 +1,4 @@
-import { Alert, AppShell, Button, Center, Group, Loader, Text } from '@mantine/core';
+import { Alert, AppShell, Button, Center, Container, Group, Loader, Text } from '@mantine/core';
 import { Link, matchPath, Navigate, Outlet, useLocation } from 'react-router';
 
 import { errorMessage } from '../api';
@@ -53,58 +53,63 @@ export function SignedInLayout({ role }: Readonly<{ role: Role }>): React.JSX.El
   }
 
   return (
-    <AppShell header={{ height: 60 }} padding="md">
+    // The header and the page share one centred column, so their edges line up on wide screens.
+    <AppShell header={{ height: 60 }}>
       <AppShell.Header>
-        <Group h="100%" px="md" justify="space-between" wrap="nowrap">
-          <Group gap="sm" wrap="nowrap">
-            {/* A phone's header has room for the links and the logout only. */}
-            <Text size="xl" fw={700} visibleFrom="xs">
-              Courtly
-            </Text>
-            <nav>
-              <Group gap={4} wrap="nowrap">
-                {navigation[role].map(({ path, label }) => {
-                  // A link stays current on the pages below it, such as one court's page.
-                  const isCurrent = matchPath(`${path}/*`, pathname) !== null;
-
-                  return (
-                    <Button
-                      key={path}
-                      size="compact-md"
-                      component={Link}
-                      to={path}
-                      variant={isCurrent ? 'light' : 'subtle'}
-                      aria-current={isCurrent ? 'page' : undefined}
-                    >
-                      {label}
-                    </Button>
-                  );
-                })}
-              </Group>
-            </nav>
-          </Group>
-          <Group wrap="nowrap">
-            {logout.isError && (
-              <Text c="red" size="sm">
-                {errorMessage(logout.error)}
+        <Container size="md" h="100%">
+          <Group h="100%" justify="space-between" wrap="nowrap">
+            <Group gap="sm" wrap="nowrap">
+              {/* A phone's header has room for the links and the logout only. */}
+              <Text size="xl" fw={800} c="teal.7" visibleFrom="xs">
+                Courtly
               </Text>
-            )}
-            <Text visibleFrom="sm">{user.name}</Text>
-            <Button
-              size="compact-md"
-              variant="default"
-              loading={logout.isPending}
-              onClick={() => {
-                logout.mutate();
-              }}
-            >
-              Log out
-            </Button>
+              <nav>
+                <Group gap={4} wrap="nowrap">
+                  {navigation[role].map(({ path, label }) => {
+                    // A link stays current on the pages below it, such as one court's page.
+                    const isCurrent = matchPath(`${path}/*`, pathname) !== null;
+
+                    return (
+                      <Button
+                        key={path}
+                        size="compact-md"
+                        component={Link}
+                        to={path}
+                        variant={isCurrent ? 'light' : 'subtle'}
+                        aria-current={isCurrent ? 'page' : undefined}
+                      >
+                        {label}
+                      </Button>
+                    );
+                  })}
+                </Group>
+              </nav>
+            </Group>
+            <Group wrap="nowrap">
+              {logout.isError && (
+                <Text c="red" size="sm">
+                  {errorMessage(logout.error)}
+                </Text>
+              )}
+              <Text visibleFrom="sm">{user.name}</Text>
+              <Button
+                size="compact-md"
+                variant="default"
+                loading={logout.isPending}
+                onClick={() => {
+                  logout.mutate();
+                }}
+              >
+                Log out
+              </Button>
+            </Group>
           </Group>
-        </Group>
+        </Container>
       </AppShell.Header>
-      <AppShell.Main>
-        <Outlet />
+      <AppShell.Main bg="gray.0">
+        <Container size="md" py="lg">
+          <Outlet />
+        </Container>
       </AppShell.Main>
     </AppShell>
   );

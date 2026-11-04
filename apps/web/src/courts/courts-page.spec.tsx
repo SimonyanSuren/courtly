@@ -31,11 +31,11 @@ describe('the Courts page', () => {
     renderApp('/courts');
 
     expect(await screen.findByRole('heading', { name: 'Court 1' })).toBeTruthy();
-    expect(screen.getByText('padel')).toBeTruthy();
+    expect(screen.getByText('Padel')).toBeTruthy();
     expect(screen.getByText('€15.00 per hour')).toBeTruthy();
     expect(screen.getByText('Open 08:00–22:00')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Court 2' })).toBeTruthy();
-    expect(screen.getByText('tennis')).toBeTruthy();
+    expect(screen.getByText('Tennis')).toBeTruthy();
     expect(screen.getByText('€20.50 per hour')).toBeTruthy();
     expect(screen.getByText('Open 00:00–24:00')).toBeTruthy();
     expect(

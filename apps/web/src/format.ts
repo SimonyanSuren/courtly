@@ -44,6 +44,11 @@ export function formatHour(hour: number): string {
   return `${String(hour).padStart(2, '0')}:00`;
 }
 
+/** A sport as a name, such as "Padel"; the API writes sports in lowercase. */
+export function formatSport(sport: string): string {
+  return sport.charAt(0).toUpperCase() + sport.slice(1);
+}
+
 /** Integer euro cents as euros, such as "€15.00". */
 export function formatPrice(cents: number): string {
   return euros.format(cents / 100);

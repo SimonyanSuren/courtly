@@ -1,5 +1,5 @@
 import { screen, waitFor, within } from '@testing-library/react';
-import { userEvent } from '@testing-library/user-event';
+import { type UserEvent, userEvent } from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
 import { type Court } from '../courts/courts';
@@ -38,9 +38,20 @@ function courtTable(): HTMLElement {
 }
 
 /** Checks that the message shows and that the field's description points to it. */
-function expectErrorAt(label: RegExp | string, message: string): void {
+function expectErrorAt(field: HTMLElement, message: string): void {
   const fieldError = screen.getByText(message);
-  expect(screen.getByLabelText(label).getAttribute('aria-describedby')).toContain(fieldError.id);
+  expect(field.getAttribute('aria-describedby')).toContain(fieldError.id);
+}
+
+/** A select in the form, by its label. Its list of options has the same label, hence the role. */
+function selectField(name: string): HTMLElement {
+  return screen.getByRole('combobox', { name });
+}
+
+/** Opens a select in the form and picks one of its options. */
+async function choose(user: UserEvent, name: string, option: string): Promise<void> {
+  await user.click(selectField(name));
+  await user.click(screen.getByRole('option', { name: option }));
 }
 
 async function openForm(buttonName: string, dialogName: string): Promise<HTMLElement> {
@@ -84,10 +95,10 @@ describe('court management', () => {
 
     const dialog = await openForm('Add court', 'Add a court');
     await user.type(within(dialog).getByLabelText(/^Name/), 'Court 3');
-    await user.selectOptions(within(dialog).getByLabelText('Sport'), 'squash');
+    await choose(user, 'Sport', 'Squash');
     await user.type(within(dialog).getByLabelText(/^Price per hour/), '15.10');
-    await user.selectOptions(within(dialog).getByLabelText('Opening hour'), '07:00');
-    await user.selectOptions(within(dialog).getByLabelText('Closing hour'), '23:00');
+    await choose(user, 'Opening hour', '07:00');
+    await choose(user, 'Closing hour', '23:00');
     api['GET /api/courts'] = Response.json([court1, court3]);
     await user.click(within(dialog).getByRole('button', { name: 'Add court' }));
 
@@ -130,7 +141,7 @@ describe('court management', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Add court' }));
 
     expectErrorAt(
-      /^Price per hour/,
+      screen.getByLabelText(/^Price per hour/),
       'Enter the price in euros with up to 2 decimals, such as 15.10.',
     );
     expect(requestCount(fetchMock, 'POST /api/courts')).toBe(0);
@@ -159,11 +170,11 @@ describe('court management', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Add court' }));
 
     expect(await alertText()).toBe('The request has invalid values. Check the opening hours.');
-    expectErrorAt(/^Name/, 'Use at most 100 characters.');
-    expectErrorAt('Sport', 'Must be one of the sports offered.');
-    expectErrorAt(/^Price per hour/, 'Must be more than €0.00.');
-    expectErrorAt('Opening hour', 'Must be a whole hour from 0 to 24.');
-    expectErrorAt('Closing hour', 'Must be after the opening hour.');
+    expectErrorAt(screen.getByLabelText(/^Name/), 'Use at most 100 characters.');
+    expectErrorAt(selectField('Sport'), 'Must be one of the sports offered.');
+    expectErrorAt(screen.getByLabelText(/^Price per hour/), 'Must be more than €0.00.');
+    expectErrorAt(selectField('Opening hour'), 'Must be a whole hour from 0 to 24.');
+    expectErrorAt(selectField('Closing hour'), 'Must be after the opening hour.');
   });
 
   it('edits a court, starting from its current values, and refreshes the list', async () => {
@@ -179,14 +190,14 @@ describe('court management', () => {
     const dialog = await openForm('Edit Court 1', 'Edit Court 1');
     const price = within(dialog).getByLabelText(/^Price per hour/);
     expect(within(dialog).getByLabelText(/^Name/)).toHaveProperty('value', 'Court 1');
-    expect(within(dialog).getByLabelText('Sport')).toHaveProperty('value', 'padel');
+    expect(selectField('Sport')).toHaveProperty('value', 'Padel');
     expect(price).toHaveProperty('value', '15.00');
-    expect(within(dialog).getByLabelText('Opening hour')).toHaveProperty('value', '8');
-    expect(within(dialog).getByLabelText('Closing hour')).toHaveProperty('value', '22');
+    expect(selectField('Opening hour')).toHaveProperty('value', '08:00');
+    expect(selectField('Closing hour')).toHaveProperty('value', '22:00');
 
     await user.clear(price);
     await user.type(price, '18,50');
-    await user.selectOptions(within(dialog).getByLabelText('Closing hour'), '23:00');
+    await choose(user, 'Closing hour', '23:00');
     api['GET /api/courts'] = Response.json([
       { ...court1, hourlyPriceCents: 1850, closingHour: 23 },
       court2,
@@ -238,7 +249,7 @@ describe('court management', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Save changes' }));
 
     expect(await screen.findByText('Another court already has this name.')).toBeTruthy();
-    expectErrorAt(/^Name/, 'Another court already has this name.');
+    expectErrorAt(screen.getByLabelText(/^Name/), 'Another court already has this name.');
     expect(screen.queryByRole('alert')).toBeNull();
     expect(requestCount(fetchMock, 'GET /api/courts')).toBe(2);
   });

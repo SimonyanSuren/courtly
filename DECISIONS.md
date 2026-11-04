@@ -386,14 +386,11 @@ the tests cover them.
     be at most €1,000.00 an hour."), and the tests check each sentence. Zod's defaults are written
     for developers and in the unit sent: "expected number to be <=100000" next to a price in euros
     reads as €100,000.
-  - The API words every field message for the person at the form, with amounts in euros ("Must
-    be at most €1,000.00 an hour."), and the tests check each sentence. Zod's defaults are written
-    for developers and in the unit sent: "expected number to be <=100000" next to a price in euros
-    reads as €100,000.
   - After any change to a court, accepted or refused, the courts list is fetched again.
   - Courts are created and edited in a dialog over the list; deactivating and reactivating take
     one click, without a confirmation.
   - The day view keeps its date in the address and shows the API's `expectedRevenueCents`.
+  - The sport and the opening and closing hours are Mantine selects, which draw their own list.
 - **Why:** as floating-point numbers, 19.99 × 100 is 1998.9999999999998. A comma is what a
   Portuguese keyboard types, and with at most 2 decimals it cannot be read as a thousands
   separator. A price changed silently is worse than a question. Deactivating is undone with one
@@ -408,9 +405,10 @@ the tests cover them.
   - Sentences written by the web app from codes the API sends: the usual choice with several
     clients or languages, but with one client in one language it is a second table of the same
     rules.
-  - Checking the price range in the browser as well: the limit would live in two places, and the
-    server's answer reaches the field just as fast.
   - Rounding a third decimal.
+  - Native selects: in Chrome, once an error message had made the dialog taller, the hour lists
+    closed as soon as they opened. They would give a phone its own picker; Mantine's list behaves
+    the same in every browser, and its tests need two browser features jsdom lacks, stubbed.
   - Separate pages for creating and editing: more routes, while the list already holds the court.
 
 ## 19. Courts: names unique ignoring case, money in integer cents, limits in the database too

@@ -1,9 +1,9 @@
-import { Alert, Button, Group, NativeSelect, Stack, TextInput } from '@mantine/core';
+import { Alert, Button, Group, Select, Stack, TextInput } from '@mantine/core';
 import { type SubmitEvent, useState } from 'react';
 
 import { ApiError, errorMessage } from '../api';
 import { type Court, type Sport, sports } from '../courts/courts';
-import { formatHour } from '../format';
+import { formatHour, formatSport } from '../format';
 import { useSaveCourt } from './court-management';
 import { centsToEuros, eurosToCents } from './price';
 
@@ -46,13 +46,14 @@ function formErrors(error: Error | null): FormErrors {
   return { byField, other };
 }
 
-function hourOptions(first: number, last: number): Array<{ value: string; label: string }> {
+function hourOptions(first: number, last: number): Array<{ value: number; label: string }> {
   return Array.from({ length: last - first + 1 }, (_, index) => ({
-    value: String(first + index),
+    value: first + index,
     label: formatHour(first + index),
   }));
 }
 
+const sportOptions = sports.map((sport) => ({ value: sport, label: formatSport(sport) }));
 const openingHours = hourOptions(0, 23);
 const closingHours = hourOptions(1, 24);
 
@@ -72,8 +73,8 @@ export function CourtForm({
   const [sport, setSport] = useState<Sport>(court?.sport ?? sports[0]);
   const [price, setPrice] = useState(court ? centsToEuros(court.hourlyPriceCents) : '');
   // A new court starts with common hours, for the admin to adjust.
-  const [openingHour, setOpeningHour] = useState(String(court?.openingHour ?? 8));
-  const [closingHour, setClosingHour] = useState(String(court?.closingHour ?? 22));
+  const [openingHour, setOpeningHour] = useState(court?.openingHour ?? 8);
+  const [closingHour, setClosingHour] = useState(court?.closingHour ?? 22);
   const [priceError, setPriceError] = useState<string>();
   const errors = formErrors(save.error);
 
@@ -99,8 +100,8 @@ export function CourtForm({
           name,
           sport,
           hourlyPriceCents,
-          openingHour: Number(openingHour),
-          closingHour: Number(closingHour),
+          openingHour,
+          closingHour,
         },
       },
       { onSuccess: onSaved },
@@ -120,13 +121,21 @@ export function CourtForm({
           }}
           error={errors.byField.name}
         />
-        <NativeSelect
+        {/*
+          Mantine's selects draw their own list: Chrome's native one closed as soon as it opened
+          once an error message had made the dialog taller (DECISIONS.md, entry 18).
+          allowDeselect off: clicking the chosen option again keeps it instead of clearing the
+          field, so onChange never reports null for these.
+        */}
+        <Select
           label="Sport"
-          data={sports}
+          data={sportOptions}
           value={sport}
-          onChange={(event) => {
-            // The select offers only sports.
-            setSport(event.currentTarget.value as Sport);
+          allowDeselect={false}
+          onChange={(value) => {
+            if (value !== null) {
+              setSport(value);
+            }
           }}
           error={errors.byField.sport}
         />
@@ -142,21 +151,27 @@ export function CourtForm({
           error={priceError ?? errors.byField.hourlyPriceCents}
         />
         <Group grow align="flex-start">
-          <NativeSelect
+          <Select
             label="Opening hour"
             data={openingHours}
             value={openingHour}
-            onChange={(event) => {
-              setOpeningHour(event.currentTarget.value);
+            allowDeselect={false}
+            onChange={(value) => {
+              if (value !== null) {
+                setOpeningHour(value);
+              }
             }}
             error={errors.byField.openingHour}
           />
-          <NativeSelect
+          <Select
             label="Closing hour"
             data={closingHours}
             value={closingHour}
-            onChange={(event) => {
-              setClosingHour(event.currentTarget.value);
+            allowDeselect={false}
+            onChange={(value) => {
+              if (value !== null) {
+                setClosingHour(value);
+              }
             }}
             error={errors.byField.closingHour}
           />

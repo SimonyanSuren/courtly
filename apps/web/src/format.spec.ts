@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatDate, formatHour, formatPrice, formatTime, formatTimeRange } from './format';
+import {
+  formatDate,
+  formatHour,
+  formatPrice,
+  formatSport,
+  formatTime,
+  formatTimeRange,
+} from './format';
 
 describe('formatting', () => {
   it("shows moments on the facility's clock, whatever the device's zone", () => {
@@ -21,5 +28,10 @@ describe('formatting', () => {
   it('shows opening hours, up to the midnight that ends the day', () => {
     expect(formatHour(8)).toBe('08:00');
     expect(formatHour(24)).toBe('24:00');
+  });
+
+  it('shows a sport as a name', () => {
+    expect(formatSport('padel')).toBe('Padel');
+    expect(formatSport('pickleball')).toBe('Pickleball');
   });
 });

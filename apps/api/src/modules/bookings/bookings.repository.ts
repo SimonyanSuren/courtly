@@ -78,23 +78,40 @@ export class BookingsRepository {
   constructor(@Inject(DATABASE) private readonly db: Database) {}
 
   /**
-   * Inserts a confirmed booking. One whose time overlaps another confirmed booking of the court
-   * breaks BOOKINGS_NO_OVERLAP: the database decides, even for two inserts at the same instant.
+   * A booking just written, read back so the answer to a write matches every later read: a time,
+   * for example, is stored only to the millisecond. An INSERT or UPDATE cannot join the court,
+   * hence the second query. Bookings are never deleted, so the row is always there.
    */
-  async create({
-    range,
-    ...booking
-  }: NewBooking): Promise<{ id: string; createdAt: Temporal.Instant }> {
+  private async stored(id: string): Promise<Booking> {
+    const [row] = await this.db
+      .select(bookingColumns)
+      .from(bookings)
+      .innerJoin(courts, eq(courts.id, bookings.courtId))
+      .where(eq(bookings.id, id));
+
+    if (row === undefined) {
+      throw new Error(`Booking ${id} was written but cannot be read.`);
+    }
+
+    return toBooking(row);
+  }
+
+  /**
+   * Inserts a confirmed booking and returns it as stored. One whose time overlaps another
+   * confirmed booking of the court breaks BOOKINGS_NO_OVERLAP: the database decides, even for two
+   * inserts at the same instant.
+   */
+  async create({ range, ...booking }: NewBooking): Promise<Booking> {
     const [created] = await this.db
       .insert(bookings)
       .values({ ...booking, startsAt: toDate(range.start), endsAt: toDate(range.end) })
-      .returning({ id: bookings.id, createdAt: bookings.createdAt });
+      .returning({ id: bookings.id });
 
     if (!created) {
       throw new Error('The insert returned no booking.');
     }
 
-    return { id: created.id, createdAt: toInstant(created.createdAt) };
+    return this.stored(created.id);
   }
 
   /** The booking with this id, if it is this user's. */
@@ -121,18 +138,18 @@ export class BookingsRepository {
   }
 
   /**
-   * Cancels the booking at `at` if it is still confirmed; false if it was not. Of two cancels at
-   * once, the second waits for the first's row lock, then finds the status changed and updates
-   * nothing.
+   * Cancels the booking at `at` if it is still confirmed and returns it as stored; undefined if
+   * it was not confirmed. Of two cancels at once, the second waits for the first's row lock, then
+   * finds the status changed and updates nothing.
    */
-  async cancel(id: string, at: Temporal.Instant): Promise<boolean> {
-    const cancelled = await this.db
+  async cancel(id: string, at: Temporal.Instant): Promise<Booking | undefined> {
+    const [cancelled] = await this.db
       .update(bookings)
       .set({ status: BookingStatus.CANCELLED, cancelledAt: toDate(at) })
       .where(and(eq(bookings.id, id), eq(bookings.status, BookingStatus.CONFIRMED)))
       .returning({ id: bookings.id });
 
-    return cancelled.length > 0;
+    return cancelled === undefined ? undefined : this.stored(cancelled.id);
   }
 
   /** The times of the court's confirmed bookings that overlap `range`. */

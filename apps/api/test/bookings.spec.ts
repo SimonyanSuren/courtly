@@ -515,6 +515,19 @@ describe('bookings over HTTP', () => {
       });
     });
 
+    it('answers the cancellation time as stored, to the millisecond, as every later read does', async () => {
+      const id = await bookId(at('18:00'));
+      clock.set('2026-07-15T09:15:00.123456789+01:00');
+
+      const response = await cancel(id);
+      const listed = await mine();
+
+      expect(response.body).toMatchObject({ cancelledAt: '2026-07-15T09:15:00.123+01:00' });
+      expect(listed).toMatchObject({
+        upcoming: [{ id, cancelledAt: '2026-07-15T09:15:00.123+01:00' }],
+      });
+    });
+
     it('allows cancelling until exactly 2 hours before the start, not 1 ms later', async () => {
       const id = await bookId(at('18:00'));
 

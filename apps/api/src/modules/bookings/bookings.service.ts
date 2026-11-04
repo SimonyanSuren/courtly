@@ -74,21 +74,10 @@ export class BookingsService {
     }
 
     const priceCents = court.hourlyPriceCents * hours;
-    const { id, createdAt } = await rejectingTakenSlot(
+
+    return rejectingTakenSlot(
       this.bookings.create({ userId, courtId, range: check.range, hours, priceCents }),
     );
-
-    return {
-      id,
-      court: { id: court.id, name: court.name, sport: court.sport },
-      startsAt: check.range.start,
-      endsAt: check.range.end,
-      hours,
-      priceCents,
-      status: BookingStatus.CONFIRMED,
-      createdAt,
-      cancelledAt: null,
-    };
   }
 
   /** The user's own bookings, cancelled ones included. One that has not ended is upcoming. */
@@ -121,12 +110,14 @@ export class BookingsService {
       throw BookingError.cancellationWindowClosed();
     }
 
+    const cancelled = await this.bookings.cancel(id, now);
+
     // Another cancel may have changed the booking since it was read.
-    if (!(await this.bookings.cancel(id, now))) {
+    if (!cancelled) {
       throw BookingError.alreadyCancelled();
     }
 
-    return { ...booking, status: BookingStatus.CANCELLED, cancelledAt: now };
+    return cancelled;
   }
 
   /**

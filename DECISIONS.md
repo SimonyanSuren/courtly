@@ -380,6 +380,14 @@ the tests cover them.
     field before sending; whether the amount is allowed is the server's decision.
   - Each message from the server shows once: a 400's `errors[]` at the field with that path, a
     409 `COURT_NAME_TAKEN` at the name, anything else in an alert above the form.
+  - The API words every field message for the person at the form, with amounts in euros ("Must
+    be at most €1,000.00 an hour."), and the tests check each sentence. Zod's defaults are written
+    for developers and in the unit sent: "expected number to be <=100000" next to a price in euros
+    reads as €100,000.
+  - The API words every field message for the person at the form, with amounts in euros ("Must
+    be at most €1,000.00 an hour."), and the tests check each sentence. Zod's defaults are written
+    for developers and in the unit sent: "expected number to be <=100000" next to a price in euros
+    reads as €100,000.
   - After any change to a court, accepted or refused, the courts list is fetched again.
   - Courts are created and edited in a dialog over the list; deactivating and reactivating take
     one click, without a confirmation.
@@ -393,6 +401,13 @@ the tests cover them.
   - `parseFloat` and multiplying by 100, then rounding: correct only with care, where reading
     the digits is exact by construction.
   - Mantine's `NumberInput`: its value is a floating-point number.
+  - Checking the price range in the browser as well: the limit would live in two places, and the
+    server's answer reaches the field just as fast.
+  - Sentences written by the web app from codes the API sends: the usual choice with several
+    clients or languages, but with one client in one language it is a second table of the same
+    rules.
+  - Checking the price range in the browser as well: the limit would live in two places, and the
+    server's answer reaches the field just as fast.
   - Rounding a third decimal.
   - Separate pages for creating and editing: more routes, while the list already holds the court.
 

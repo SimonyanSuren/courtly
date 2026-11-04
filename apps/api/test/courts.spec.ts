@@ -198,53 +198,107 @@ describe('courts over HTTP', () => {
       expect(response.status).toBe(201);
     });
 
+    const HOUR = 'Must be a whole hour from 0 to 24.';
+    const WHOLE_CENTS = 'Must be a whole number of cents.';
+    const SPORTS = 'Must be one of: padel, tennis, squash, badminton, pickleball.';
+
+    // Each message is shown next to its field in the web app, so the exact sentence is tested.
     it.each([
-      { problem: 'an empty name', change: { name: '' }, path: 'name' },
-      { problem: 'a name of spaces only', change: { name: ' '.repeat(3) }, path: 'name' },
-      { problem: 'a name over 100 characters', change: { name: 'x'.repeat(101) }, path: 'name' },
-      { problem: 'an unknown sport', change: { sport: 'golf' }, path: 'sport' },
-      { problem: 'a missing sport', change: { sport: undefined }, path: 'sport' },
-      { problem: 'a price of 0', change: { hourlyPriceCents: 0 }, path: 'hourlyPriceCents' },
+      { problem: 'an empty name', change: { name: '' }, path: 'name', message: 'Enter a name.' },
+      {
+        problem: 'a name of spaces only',
+        change: { name: ' '.repeat(3) },
+        path: 'name',
+        message: 'Enter a name.',
+      },
+      {
+        problem: 'a name over 100 characters',
+        change: { name: 'x'.repeat(101) },
+        path: 'name',
+        message: 'Use at most 100 characters.',
+      },
+      { problem: 'an unknown sport', change: { sport: 'golf' }, path: 'sport', message: SPORTS },
+      { problem: 'a missing sport', change: { sport: undefined }, path: 'sport', message: SPORTS },
+      {
+        problem: 'a price of 0',
+        change: { hourlyPriceCents: 0 },
+        path: 'hourlyPriceCents',
+        message: 'Must be more than €0.00.',
+      },
       {
         problem: 'a negative price',
         change: { hourlyPriceCents: -2400 },
         path: 'hourlyPriceCents',
+        message: 'Must be more than €0.00.',
       },
-      { problem: 'part of a cent', change: { hourlyPriceCents: 2400.5 }, path: 'hourlyPriceCents' },
+      {
+        problem: 'part of a cent',
+        change: { hourlyPriceCents: 2400.5 },
+        path: 'hourlyPriceCents',
+        message: WHOLE_CENTS,
+      },
       {
         problem: 'a price in a string',
         change: { hourlyPriceCents: '2400' },
         path: 'hourlyPriceCents',
+        message: WHOLE_CENTS,
       },
       {
+        // The limit in euros, as the form shows prices: not "<=100000", which reads as €100,000.
         problem: 'a price over €1,000',
         change: { hourlyPriceCents: 100_001 },
         path: 'hourlyPriceCents',
+        message: 'Must be at most €1,000.00 an hour.',
       },
-      { problem: 'an opening hour not whole', change: { openingHour: 8.5 }, path: 'openingHour' },
-      { problem: 'a closing hour not whole', change: { closingHour: 21.5 }, path: 'closingHour' },
-      { problem: 'an opening hour before 0', change: { openingHour: -1 }, path: 'openingHour' },
-      { problem: 'a closing hour after 24', change: { closingHour: 25 }, path: 'closingHour' },
+      {
+        problem: 'an opening hour not whole',
+        change: { openingHour: 8.5 },
+        path: 'openingHour',
+        message: HOUR,
+      },
+      {
+        problem: 'a closing hour not whole',
+        change: { closingHour: 21.5 },
+        path: 'closingHour',
+        message: HOUR,
+      },
+      {
+        problem: 'an opening hour before 0',
+        change: { openingHour: -1 },
+        path: 'openingHour',
+        message: HOUR,
+      },
+      {
+        problem: 'a closing hour after 24',
+        change: { closingHour: 25 },
+        path: 'closingHour',
+        message: HOUR,
+      },
       {
         problem: 'closing as it opens',
         change: { openingHour: 8, closingHour: 8 },
         path: 'closingHour',
+        message: 'Must be after the opening hour.',
       },
       {
         problem: 'closing before it opens',
         change: { openingHour: 22, closingHour: 8 },
         path: 'closingHour',
+        message: 'Must be after the opening hour.',
       },
-    ])('answers 400 for $problem', async ({ change, path }) => {
-      const response = await post({ ...padel, ...change });
+    ])(
+      'answers 400 for $problem, with a sentence at the field',
+      async ({ change, path, message }) => {
+        const response = await post({ ...padel, ...change });
 
-      expect(response.status).toBe(400);
-      expect(response.body).toMatchObject({
-        code: 'VALIDATION_FAILED',
-        errors: [{ in: 'body', path }],
-      });
-      expect(await db.select().from(courts)).toEqual([]);
-    });
+        expect(response.status).toBe(400);
+        expect(response.body).toMatchObject({
+          code: 'VALIDATION_FAILED',
+          errors: [{ in: 'body', path, message }],
+        });
+        expect(await db.select().from(courts)).toEqual([]);
+      },
+    );
 
     it('answers 409 for a name another court has, in any case and with spaces', async () => {
       await post(padel);

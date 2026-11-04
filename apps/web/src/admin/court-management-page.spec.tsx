@@ -142,10 +142,10 @@ describe('court management', () => {
       'GET /api/auth/me': Response.json(admin),
       'GET /api/courts': Response.json([court1]),
       'POST /api/courts': problem(400, 'VALIDATION_FAILED', 'The request has invalid values.', [
-        { in: 'body', path: 'name', message: 'Must be at most 50 characters.' },
+        { in: 'body', path: 'name', message: 'Use at most 100 characters.' },
         { in: 'body', path: 'sport', message: 'Must be one of the sports offered.' },
-        { in: 'body', path: 'hourlyPriceCents', message: 'Must be more than 0.' },
-        { in: 'body', path: 'openingHour', message: 'Must be a whole hour.' },
+        { in: 'body', path: 'hourlyPriceCents', message: 'Must be more than €0.00.' },
+        { in: 'body', path: 'openingHour', message: 'Must be a whole hour from 0 to 24.' },
         { in: 'body', path: 'closingHour', message: 'Must be after the opening hour.' },
         // A rule about the court as a whole has no field of its own.
         { in: 'body', path: '', message: 'Check the opening hours.' },
@@ -159,10 +159,10 @@ describe('court management', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Add court' }));
 
     expect(await alertText()).toBe('The request has invalid values. Check the opening hours.');
-    expectErrorAt(/^Name/, 'Must be at most 50 characters.');
+    expectErrorAt(/^Name/, 'Use at most 100 characters.');
     expectErrorAt('Sport', 'Must be one of the sports offered.');
-    expectErrorAt(/^Price per hour/, 'Must be more than 0.');
-    expectErrorAt('Opening hour', 'Must be a whole hour.');
+    expectErrorAt(/^Price per hour/, 'Must be more than €0.00.');
+    expectErrorAt('Opening hour', 'Must be a whole hour from 0 to 24.');
     expectErrorAt('Closing hour', 'Must be after the opening hour.');
   });
 

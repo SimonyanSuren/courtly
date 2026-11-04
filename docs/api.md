@@ -36,7 +36,9 @@ Every error has the content type `application/problem+json`:
 
 `detail` is a sentence a user can read; `code` stays stable for programs. A 400 with the code
 `VALIDATION_FAILED` also lists each invalid value in `errors`:
-`{ "in": "body" | "query" | "param", "path": "hours", "message": "..." }`.
+`{ "in": "body" | "query" | "param", "path": "hours", "message": "Must be 1 or 2." }`. Each
+`message` is a sentence to show next to the field, with amounts in euros: "Must be at most
+€1,000.00 an hour."
 
 | Status | Meaning                                                     |
 | ------ | ----------------------------------------------------------- |

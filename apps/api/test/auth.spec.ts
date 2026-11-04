@@ -116,7 +116,10 @@ describe('login and sessions over HTTP', () => {
       const response = await login({ email: ana.email });
 
       expect(response.status).toBe(400);
-      expect(response.body).toMatchObject({ code: 'VALIDATION_FAILED' });
+      expect(response.body).toMatchObject({
+        code: 'VALIDATION_FAILED',
+        errors: [{ in: 'body', path: 'password', message: 'Enter your password.' }],
+      });
     });
 
     it('ends the session the browser had, so a planted token never becomes logged in', async () => {

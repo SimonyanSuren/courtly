@@ -232,7 +232,7 @@ describe('availability over HTTP', () => {
       expect(response.status).toBe(400);
       expect(response.body).toMatchObject({
         code: 'VALIDATION_FAILED',
-        errors: [{ in: 'query', path: 'date' }],
+        errors: [{ in: 'query', path: 'date', message: 'Must be a date such as 2026-11-05.' }],
       });
     },
   );

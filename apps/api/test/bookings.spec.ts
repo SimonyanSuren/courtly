@@ -14,6 +14,13 @@ import { whileUncommitted } from './concurrency';
 import { resetDatabase } from './database';
 import { createUser, logIn } from './users';
 
+/** What a refused value of each field answers, whatever is wrong with it. */
+const FIELD_MESSAGES: Readonly<Record<string, string>> = {
+  courtId: 'Must be the id of a court.',
+  startsAt: 'Must be a moment with its offset, such as 2026-11-05T18:00:00+00:00.',
+  hours: 'Must be 1 or 2.',
+};
+
 /** A UUID no booking or court has. */
 const UNKNOWN_ID = '019a4b2c-0000-7000-8000-000000000000';
 
@@ -218,13 +225,13 @@ describe('bookings over HTTP', () => {
         path: 'startsAt',
       },
       { problem: 'a court id that is not a UUID', change: { courtId: 'court-1' }, path: 'courtId' },
-    ])('answers 400 for $problem', async ({ change, path }) => {
+    ])('answers 400 for $problem, with a sentence at the field', async ({ change, path }) => {
       const response = await book({ startsAt: at('10:00'), ...change });
 
       expect(response.status).toBe(400);
       expect(response.body).toMatchObject({
         code: 'VALIDATION_FAILED',
-        errors: [{ in: 'body', path }],
+        errors: [{ in: 'body', path, message: FIELD_MESSAGES[path] }],
       });
       expect(await stored()).toEqual([]);
     });
